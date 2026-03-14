@@ -19,7 +19,8 @@ class ProcessarBcaJob implements ShouldQueue
     public array $backoff = [30, 60, 120];
 
     public function __construct(
-        public readonly int $bcaId
+        public readonly int $bcaId,
+        public readonly array $keywords = []
     ) {}
 
     public function handle(BcaProcessingService $service): void
@@ -34,7 +35,7 @@ class ProcessarBcaJob implements ShouldQueue
             return;
         }
 
-        AnalisarEfetivoJob::dispatch($this->bcaId);
+        AnalisarEfetivoJob::dispatch($this->bcaId, 'manual', $this->keywords);
     }
 
     public function failed(\Throwable $exception): void

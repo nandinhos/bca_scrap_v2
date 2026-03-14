@@ -20,7 +20,8 @@ class AnalisarEfetivoJob implements ShouldQueue
 
     public function __construct(
         public readonly int $bcaId,
-        public readonly string $tipo = 'automatica'
+        public readonly string $tipo = 'automatica',
+        public readonly array $keywords = []
     ) {}
 
     public function handle(BcaAnalysisService $service): void
@@ -28,7 +29,7 @@ class AnalisarEfetivoJob implements ShouldQueue
         $bca = Bca::findOrFail($this->bcaId);
         Log::info("AnalisarEfetivoJob: analyzing BCA {$bca->data}");
 
-        $count = $service->analisar($bca, $this->tipo);
+        $count = $service->analisar($bca, $this->tipo, $this->keywords);
 
         Log::info("AnalisarEfetivoJob: done — {$count} occurrences for BCA {$bca->data}");
     }

@@ -16,7 +16,7 @@ class BcaAnalysisService
      * Analyze the BCA text and find matching efetivos and keywords.
      * Returns count of new occurrences found.
      */
-    public function analisar(Bca $bca, string $tipo = 'automatica'): int
+    public function analisar(Bca $bca, string $tipo = 'automatica', array $keywordsToSearch = []): int
     {
         $data = $bca->data->format('Y-m-d');
         $cacheKey = "bca:analise:{$data}";
@@ -40,9 +40,29 @@ class BcaAnalysisService
                 // User wants highlight specifically on FULL NAME in the preview
                 $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
 
-                $ocorrencia = BcaOcorrencia::firstOrCreate(
+                // Determine total quantity (max mentions to avoid double counting name+saram on same line)
+                $textoMaiusc = strtoupper($textoBca);
+                $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
+                             mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
+                $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
+                
+                $quantidade = max($countSaram, $countNome);
+                if ($quantidade === 0) $quantidade = 1;
+
+                // Determine match type for the UI badges
+                $tipoMatch = 'NOME';
+
+                if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
+                    $tipoMatch = 'SARAM';
+                    // Check if name also appears to show "SARAM + NOME"
+                    if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
+                        $tipoMatch = 'SARAM + NOME';
+                    }
+                }
+
+                $ocorrencia = BcaOcorrencia::updateOrCreate(
                     ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
-                    ['snippet' => $snippet]
+                    ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
                 );
 
                 if ($ocorrencia->wasRecentlyCreated || !$ocorrencia->foiEnviado()) {
@@ -52,11 +72,15 @@ class BcaAnalysisService
             }
         }
 
-        // 2. Search active keywords
-        $keywords = PalavraChave::ativa()->get();
+        // 2. Search keywords (either provided or active in DB)
+        $keywords = !empty($keywordsToSearch) 
+            ? PalavraChave::whereIn('palavra', $keywordsToSearch)->get()
+            : PalavraChave::ativa()->get();
+
         foreach ($keywords as $kw) {
-            if (str_contains(strtoupper($textoBca), strtoupper($kw->palavra))) {
-                $keywordsEncontradas[] = $kw->palavra;
+            $kwCount = mb_substr_count(strtoupper($textoBca), strtoupper($kw->palavra));
+            if ($kwCount > 0) {
+                $keywordsEncontradas[$kw->palavra] = $kwCount;
             }
         }
 

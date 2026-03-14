@@ -8,7 +8,7 @@ class BcaOcorrencia extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['bca_id', 'efetivo_id', 'snippet', 'enviado_em'];
+    protected $fillable = ['bca_id', 'efetivo_id', 'tipo_match', 'quantidade', 'snippet', 'enviado_em'];
 
     protected function casts(): array
     {

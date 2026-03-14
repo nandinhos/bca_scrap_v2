@@ -20,7 +20,8 @@ class BaixarBcaJob implements ShouldQueue
     public array $backoff = [30, 60, 120];
 
     public function __construct(
-        public readonly string $data // Y-m-d format
+        public readonly string $data, // Y-m-d format
+        public readonly array $keywords = []
     ) {}
 
     public function handle(BcaDownloadService $service): void
@@ -53,8 +54,8 @@ class BaixarBcaJob implements ShouldQueue
             ['numero' => $numero, 'url' => $path]
         );
 
-        // Chain next job
-        ProcessarBcaJob::dispatch($bca->id);
+        // Chain next job with keywords
+        ProcessarBcaJob::dispatch($bca->id, $this->keywords);
     }
 
     public function failed(\Throwable $exception): void

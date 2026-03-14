@@ -1,0 +1,97 @@
+<?php
+
+/**
+ * Configuração do Laravel Horizon
+ * Copiar para: config/horizon.php
+ */
+
+return [
+
+    'domain'     => env('HORIZON_DOMAIN'),
+    'path'       => env('HORIZON_PATH', 'horizon'),
+    'use'        => 'default',
+    'prefix'     => env('HORIZON_PREFIX', 'horizon:'),
+    'middleware' => ['web'],
+
+    // Janela de espera para alertas (segundos)
+    'waits' => [
+        'redis:default' => 60,
+        'redis:emails'  => 120,
+    ],
+
+    // Retenção de histórico de jobs
+    'trim' => [
+        'recent'        => 60,     // minutos — jobs recentes no dashboard
+        'pending'       => 60,
+        'completed'     => 60,
+        'recent_failed' => 10080,  // 1 semana — manter falhas para investigação
+        'failed'        => 10080,
+        'monitored'     => 10080,
+    ],
+
+    'silenced' => [
+        // Jobs que não devem aparecer no dashboard (muito frequentes)
+        // App\Jobs\AlgumJobMuitoFrequente::class,
+    ],
+
+    'metrics' => [
+        'trim_snapshots' => [
+            'job'   => 24,
+            'queue' => 24,
+        ],
+    ],
+
+    'fast_termination' => false,
+    'memory_limit'     => 64,  // MB — matar worker se ultrapassar
+
+    /*
+    |--------------------------------------------------------------------------
+    | Configuração padrão dos workers
+    |--------------------------------------------------------------------------
+    | balance: 'auto' — distribui workers conforme tamanho das filas
+    | balance: 'simple' — divide igualmente
+    | balance: 'false' — sem balanceamento (cada supervisor = 1 fila)
+    */
+    'defaults' => [
+        'supervisor-1' => [
+            'connection'          => 'redis',
+            'queue'               => ['default', 'emails'],
+            'balance'             => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses'        => 4,
+            'minProcesses'        => 1,
+            'maxTime'             => 3600,   // 1 hora máx por job
+            'maxJobs'             => 1000,
+            'memory'              => 128,    // MB por worker
+            'tries'               => 3,
+            'timeout'             => 120,    // segundos por job
+            'nice'                => 0,
+        ],
+    ],
+
+    'environments' => [
+        'production' => [
+            'supervisor-1' => [
+                'maxProcesses'      => 4,
+                'minProcesses'      => 2,   // Mínimo 2 workers sempre ativos
+                'balanceMaxShift'   => 1,
+                'balanceCooldown'   => 3,
+            ],
+        ],
+
+        'staging' => [
+            'supervisor-1' => [
+                'maxProcesses' => 2,
+                'minProcesses' => 1,
+            ],
+        ],
+
+        'local' => [
+            'supervisor-1' => [
+                'maxProcesses' => 2,
+                'minProcesses' => 1,
+            ],
+        ],
+    ],
+
+];

@@ -1,0 +1,122 @@
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "18080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - bcas_storage:/var/www/html/storage/app/public/bcas
+    depends_on:
+      php:
+        condition: service_healthy
+    networks:
+      - bca_network
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/var/www/html
+      - bcas_storage:/var/www/html/storage/app/public/bcas
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - bca_network
+    environment:
+      - APP_KEY=base64:pFNVu3k50TFe3b/UWfhzw73UYKvsJEMDuKbGvk087qg=
+    env_file:
+      - .env
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - .:/var/www/html
+      - bcas_storage:/var/www/html/storage/app/public/bcas
+    depends_on:
+      php:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - bca_network
+    environment:
+      - APP_KEY=base64:pFNVu3k50TFe3b/UWfhzw73UYKvsJEMDuKbGvk087qg=
+    env_file:
+      - .env
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    command: php artisan schedule:work
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      php:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - bca_network
+    environment:
+      - APP_KEY=base64:pFNVu3k50TFe3b/UWfhzw73UYKvsJEMDuKbGvk087qg=
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-bca_db}
+      POSTGRES_USER: ${DB_USERNAME:-bca_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bca_pass}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-bca_user} -d ${DB_DATABASE:-bca_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bca_network
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bca_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@bca.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "15050:80"
+    profiles:
+      - dev
+    networks:
+      - bca_network
+
+networks:
+  bca_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  bcas_storage:

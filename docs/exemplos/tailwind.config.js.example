@@ -1,0 +1,38 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+    content: [
+        './resources/**/*.blade.php',
+        './resources/**/*.js',
+    ],
+    theme: {
+        extend: {
+            colors: {
+                // Paleta de cores da Força Aérea Brasileira (FAB)
+                fab: {
+                    50:  '#f0f5fa',
+                    100: '#dce8f4',
+                    200: '#b8d1e9',
+                    300: '#88b0d8',
+                    400: '#5588c3',
+                    500: '#3b6aab',
+                    600: '#2d528a',  // Cor principal FAB
+                    700: '#254270',
+                    800: '#1f3659',
+                    900: '#1b2d4a',
+                    950: '#0f1a2e',
+                },
+            },
+            fontFamily: {
+                sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            },
+            // Animações para loading states do Livewire
+            animation: {
+                'pulse-fast': 'pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+        },
+    },
+    plugins: [
+        require('@tailwindcss/forms'),
+        require('@tailwindcss/typography'),
+    ],
+}

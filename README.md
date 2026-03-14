@@ -14,12 +14,12 @@ O **BCA Scrap v2** é uma reescrita completa do sistema de busca automatizada de
 
 | Aspecto | Sistema Antigo | Sistema Novo | Ganho |
 |---------|---------------|--------------|-------|
+| **Matching** | Busca frouxa (FTS) | **Estrita (SARAM/Nome)** | 🎯 Alta Precisão |
 | **Performance** | 5-15s | 1-3s | ⚡ **80% mais rápido** |
-| **Framework** | PHP vanilla | Laravel 12 | 🎯 Modular e testável |
-| **Frontend** | Alpine.js CDN | Livewire 4 | 🎨 Componentes reativos |
-| **Database** | MariaDB | PostgreSQL 16 | 🔍 Full-text search nativo |
-| **Cache** | Arquivos .txt | Redis multi-layer | 💾 Performance otimizada |
-| **Jobs** | CRON scripts | Laravel Queue + Horizon | 🔄 Processamento assíncrono |
+| **UX** | PDF Externo | **Visualização In-app** | 🎨 Fluxo Contínuo |
+| **E-mails** | Manual/CRON | **Automático Real-time** | 📧 Notificação Instantânea |
+| **Cache** | Arquivos .txt | Redis multi-layer | 💾 Alta Performance |
+| **Processamento** | Síncrono (Trava UI) | **Assíncrono (Filas)** | 🔄 Interface Fluida |
 | **Testes** | 0% | 80%+ | ✅ Qualidade garantida |
 
 ---
@@ -31,9 +31,13 @@ O **BCA Scrap v2** é uma reescrita completa do sistema de busca automatizada de
 │  T - Tailwind CSS 4.x (JIT mode)                       │
 │  A - Alpine.js 3.x (integrado via Livewire)            │
 │  L - Laravel 12 (PHP 8.3+)                             │
-│  L - Livewire 4 (componentes reativos full-page)       │
+│  L - Livewire 3 (componentes reativos full-page)       │
 └─────────────────────────────────────────────────────────┘
 ```
+
+**Versão**: 2.1.1
+**Última atualização**: 14/03/2026
+**Status**: ✅ Funcional & Homologado
 
 ### Stack Completo
 

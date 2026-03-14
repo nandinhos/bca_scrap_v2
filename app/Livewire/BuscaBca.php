@@ -89,10 +89,10 @@ class BuscaBca extends Component
 
         $this->pollCount++;
 
-        // Timeout after 40 polls × 3s = 2 minutes
-        if ($this->pollCount > 40) {
-            $this->mensagem = 'Tempo limite excedido. Tente novamente.';
-            $this->mensagemTipo = 'error';
+        // Timeout after 120 polls × 3s = 6 minutes
+        if ($this->pollCount > 120) {
+            $this->mensagem = 'Tempo limite excedido. O arquivo é grande e ainda está sendo processado em segundo plano. Tente atualizar a página em instantes.';
+            $this->mensagemTipo = 'warning';
             $this->buscando = false;
             return;
         }

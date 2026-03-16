@@ -14,10 +14,10 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 1.1 | Remover/excluir .env do repositório | Arquivo não existe ou está no .gitignore | [ ] |
-| 1.2 | Corrigir XSS em BcaAnalysisService.php (linha 160-164) | Usar e() antes de aplicar highlight | [ ] |
-| 1.3 | Validar APP_DEBUG=false em produção | Verificar config e .env | [ ] |
-| 1.4 | Adicionar EnsureRole logging de acessos negados | Log presente ao testar acesso negado | [ ] |
+| 1.1 | Remover/excluir .env do repositório | Arquivo não existe ou está no .gitignore | [x] |
+| 1.2 | Corrigir XSS em BcaAnalysisService.php (linha 160-164) | Usar e() antes de aplicar highlight | [x] |
+| 1.3 | Validar APP_DEBUG=false em produção | Verificar config e .env | [x] |
+| 1.4 | Adicionar EnsureRole logging de acessos negados | Log presente ao testar acesso negado | [x] |
 
 ---
 
@@ -114,6 +114,15 @@
 
 ## Métricas de Progresso
 
+```
+SPRINT 1 ██████████████████ 100% ✅
+SPRINT 2 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 3 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 4 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 5 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 8 ░░░░░░░░░░░░░░░░░░░░░░  0%
 ```
 SPRINT 1 ████████░░░░░░░░░░░░░ 20%
 SPRINT 2 ░░░░░░░░░░░░░░░░░░░░░  0%

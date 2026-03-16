@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Cache::flush();
 });
 
@@ -31,7 +31,7 @@ it('returns storage path when BCA is found via cache url', function () {
     $result = $service->baixarBca('2026-03-14');
 
     expect($result)->toBe('bcas/2026-03-14.pdf');
-    Storage::assertExists('bcas/2026-03-14.pdf');
+    Storage::disk('public')->assertExists('bcas/2026-03-14.pdf');
 });
 
 it('caches nao_encontrado when BCA is not found', function () {

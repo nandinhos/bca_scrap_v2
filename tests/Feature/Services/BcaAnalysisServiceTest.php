@@ -105,6 +105,6 @@ it('records active keywords found in BCA text', function () {
     $execucao = BcaExecucao::latest()->first();
     $mensagem = json_decode($execucao->mensagem, true);
 
-    expect($mensagem['keywords_encontradas'])->toContain('KC-390');
-    expect($mensagem['keywords_encontradas'])->not->toContain('FX-2');
+    expect(array_keys($mensagem['keywords_encontradas']))->toContain('KC-390');
+    expect(array_keys($mensagem['keywords_encontradas']))->not->toContain('FX-2');
 });

@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Services;
 
+use App\Events\MilitarEncontradoEvent;
 use App\Models\Bca;
-use App\Models\BcaOcorrencia;
 use App\Models\BcaExecucao;
+use App\Models\BcaOcorrencia;
 use App\Models\Efetivo;
 use App\Models\PalavraChave;
-use App\Events\MilitarEncontradoEvent;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -23,8 +24,9 @@ class BcaAnalysisService
 
         $textoBca = Cache::get("bca:texto:{$data}") ?? $bca->texto_completo;
 
-        if (!$textoBca) {
+        if (! $textoBca) {
             Log::warning("BCA [{$data}]: no text available for analysis");
+
             return 0;
         }
 
@@ -35,7 +37,7 @@ class BcaAnalysisService
         $efetivos = Efetivo::ativo()->get();
         foreach ($efetivos as $efetivo) {
             $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
-            
+
             if ($matchedTerm) {
                 // User wants highlight specifically on FULL NAME in the preview
                 $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
@@ -45,9 +47,11 @@ class BcaAnalysisService
                 $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
                              mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
                 $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
-                
+
                 $quantidade = max($countSaram, $countNome);
-                if ($quantidade === 0) $quantidade = 1;
+                if ($quantidade === 0) {
+                    $quantidade = 1;
+                }
 
                 // Determine match type for the UI badges
                 $tipoMatch = 'NOME';
@@ -65,15 +69,17 @@ class BcaAnalysisService
                     ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
                 );
 
-                if ($ocorrencia->wasRecentlyCreated || !$ocorrencia->foiEnviado()) {
-                    if ($ocorrencia->wasRecentlyCreated) $count++;
+                if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
+                    if ($ocorrencia->wasRecentlyCreated) {
+                        $count++;
+                    }
                     event(new MilitarEncontradoEvent($ocorrencia));
                 }
             }
         }
 
         // 2. Search keywords (either provided or active in DB)
-        $keywords = !empty($keywordsToSearch) 
+        $keywords = ! empty($keywordsToSearch)
             ? PalavraChave::whereIn('palavra', $keywordsToSearch)->get()
             : PalavraChave::ativa()->get();
 
@@ -86,7 +92,7 @@ class BcaAnalysisService
 
         // 3. Log execution
         $mensagem = null;
-        if (!empty($keywordsEncontradas)) {
+        if (! empty($keywordsEncontradas)) {
             $mensagem = json_encode(['keywords_encontradas' => $keywordsEncontradas]);
         }
 
@@ -100,7 +106,7 @@ class BcaAnalysisService
 
         Cache::put($cacheKey, ['count' => $count, 'keywords' => $keywordsEncontradas], now()->addHour());
 
-        Log::info("BCA [{$data}]: analysis done — {$count} new occurrences, " . count($keywordsEncontradas) . " keywords");
+        Log::info("BCA [{$data}]: analysis done — {$count} new occurrences, ".count($keywordsEncontradas).' keywords');
 
         $bca->update(['analisado_em' => now()]);
 
@@ -138,7 +144,7 @@ class BcaAnalysisService
         $nomeCompleto = $efetivo->nome_completo;
 
         $matchedLines = [];
-        
+
         // We look for the matchedTerm to find the right lines
         foreach ($lines as $i => $line) {
             if (mb_stripos($line, $matchedTerm) !== false) {
@@ -152,13 +158,16 @@ class BcaAnalysisService
         }
 
         $snippet = implode("\n", array_filter(array_values($matchedLines)));
-        
+
         // HIGHLIGHT: User specifically requested highlight ONLY over the full name
         // (If SARAM matched but name is also in the snippet, highlight the name)
         $highlightBase = mb_stripos($snippet, $nomeCompleto) !== false ? $nomeCompleto : $matchedTerm;
 
+        // Escape HTML before applying highlight to prevent XSS
+        $snippet = e($snippet);
+
         $snippet = preg_replace(
-            '/' . preg_quote($highlightBase, '/') . '/i',
+            '/'.preg_quote($highlightBase, '/').'/i',
             '<mark style="background:#00ff00;color:#000;font-weight:bold;padding:0 2px;border-radius:2px">$0</mark>',
             $snippet
         );

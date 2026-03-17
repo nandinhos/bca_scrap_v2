@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Mail;
 
 use App\Models\BcaOcorrencia;
@@ -19,7 +20,7 @@ class NotificacaoBcaMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'BCA - Você foi mencionado no Boletim ' . $this->ocorrencia->bca->numero,
+            subject: 'BCA - Você foi mencionado no Boletim '.$this->ocorrencia->bca->numero,
         );
     }
 

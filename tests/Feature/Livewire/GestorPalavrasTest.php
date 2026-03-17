@@ -3,9 +3,10 @@
 use App\Livewire\GestorPalavras;
 use App\Models\PalavraChave;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('pode ser renderizado', function () {
     $user = User::factory()->create(['role' => 'operador']);

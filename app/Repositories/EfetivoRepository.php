@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Repositories;
 
 use App\Models\Efetivo;
 use App\Repositories\Contracts\EfetivoRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class EfetivoRepository implements EfetivoRepositoryInterface
 {
@@ -17,15 +19,15 @@ class EfetivoRepository implements EfetivoRepositoryInterface
         return Efetivo::where('saram', $saram)->first();
     }
 
-    public function all(array $filters = []): \Illuminate\Pagination\LengthAwarePaginator
+    public function all(array $filters = []): LengthAwarePaginator
     {
         $query = Efetivo::query()->orderBy('nome_guerra');
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
-                $q->where('nome_guerra', 'ilike', '%' . $filters['search'] . '%')
-                  ->orWhere('nome_completo', 'ilike', '%' . $filters['search'] . '%')
-                  ->orWhere('saram', 'like', '%' . $filters['search'] . '%');
+                $q->where('nome_guerra', 'ilike', '%'.$filters['search'].'%')
+                    ->orWhere('nome_completo', 'ilike', '%'.$filters['search'].'%')
+                    ->orWhere('saram', 'like', '%'.$filters['search'].'%');
             });
         }
 
@@ -40,6 +42,7 @@ class EfetivoRepository implements EfetivoRepositoryInterface
     public function update(Efetivo $efetivo, array $data): Efetivo
     {
         $efetivo->update($data);
+
         return $efetivo->fresh();
     }
 

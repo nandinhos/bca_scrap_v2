@@ -1,13 +1,15 @@
 <?php
+
 use App\Models\Bca;
 use App\Models\BcaExecucao;
 use App\Models\BcaOcorrencia;
 use App\Models\Efetivo;
 use App\Models\PalavraChave;
 use App\Services\BcaAnalysisService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Cache::flush();

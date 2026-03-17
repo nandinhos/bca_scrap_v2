@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Bca;
@@ -19,18 +20,21 @@ class BcaProcessingService
 
         if ($cached !== null) {
             Log::info("BCA [{$bca->data}]: texto from cache");
+
             return $cached;
         }
 
-        if (!$bca->url) {
+        if (! $bca->url) {
             Log::warning("BCA [{$bca->data}]: no URL to process");
+
             return null;
         }
 
-        $storagePath = \Illuminate\Support\Facades\Storage::disk('public')->path($bca->url);
+        $storagePath = Storage::disk('public')->path($bca->url);
 
-        if (!file_exists($storagePath)) {
+        if (! file_exists($storagePath)) {
             Log::error("BCA [{$bca->data}]: PDF file not found at {$storagePath}");
+
             return null;
         }
 
@@ -47,6 +51,7 @@ class BcaProcessingService
 
             if ($returnCode !== 0) {
                 Log::error("BCA [{$bca->data}]: pdftotext failed with code {$returnCode}");
+
                 return null;
             }
 
@@ -57,6 +62,7 @@ class BcaProcessingService
 
             if (empty(trim($text))) {
                 Log::warning("BCA [{$bca->data}]: extracted text is empty");
+
                 return null;
             }
 
@@ -70,11 +76,13 @@ class BcaProcessingService
                 'processado_em' => now(),
             ]);
 
-            Log::info("BCA [{$bca->data}]: texto extracted (" . strlen($text) . " chars)");
+            Log::info("BCA [{$bca->data}]: texto extracted (".strlen($text).' chars)');
+
             return $text;
 
         } catch (\Exception $e) {
-            Log::error("BCA [{$bca->data}]: texto extraction exception — " . $e->getMessage());
+            Log::error("BCA [{$bca->data}]: texto extraction exception — ".$e->getMessage());
+
             return null;
         }
     }

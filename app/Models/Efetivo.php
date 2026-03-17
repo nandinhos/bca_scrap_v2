@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +36,7 @@ class Efetivo extends Model
     public function getSaramHifenado(): string
     {
         $s = $this->saram;
-        return substr($s, 0, -1) . '-' . substr($s, -1);
+
+        return substr($s, 0, -1).'-'.substr($s, -1);
     }
 }

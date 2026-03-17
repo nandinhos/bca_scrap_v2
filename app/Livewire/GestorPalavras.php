@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire;
 
 use App\Models\PalavraChave;
@@ -11,12 +12,19 @@ use Livewire\Component;
 class GestorPalavras extends Component
 {
     public array $palavras = [];
+
     public bool $showModal = false;
+
     public ?int $editingId = null;
+
     public string $palavra = '';
+
     public string $cor = 'FFFFFF';
 
-    public function mount(): void { $this->reload(); }
+    public function mount(): void
+    {
+        $this->reload();
+    }
 
     private function reload(): void
     {
@@ -26,14 +34,14 @@ class GestorPalavras extends Component
     public function toggleAtiva(int $id): void
     {
         $p = PalavraChave::findOrFail($id);
-        $p->update(['ativa' => !$p->ativa]);
+        $p->update(['ativa' => ! $p->ativa]);
         $this->reload();
     }
 
     public function openCreate(): void
     {
         $this->ensureAdmin();
-        $this->reset(['editingId','palavra']);
+        $this->reset(['editingId', 'palavra']);
         $this->cor = 'FFFFFF';
         $this->showModal = true;
     }
@@ -53,12 +61,12 @@ class GestorPalavras extends Component
         $this->ensureAdmin();
         $this->validate([
             'palavra' => 'required|string|max:100',
-            'cor' => ['required','regex:/^[0-9A-Fa-f]{6}$/'],
+            'cor' => ['required', 'regex:/^[0-9A-Fa-f]{6}$/'],
         ]);
         if ($this->editingId) {
-            PalavraChave::findOrFail($this->editingId)->update(['palavra'=>strtoupper($this->palavra),'cor'=>strtoupper($this->cor)]);
+            PalavraChave::findOrFail($this->editingId)->update(['palavra' => strtoupper($this->palavra), 'cor' => strtoupper($this->cor)]);
         } else {
-            PalavraChave::create(['palavra'=>strtoupper($this->palavra),'cor'=>strtoupper($this->cor),'ativa'=>false]);
+            PalavraChave::create(['palavra' => strtoupper($this->palavra), 'cor' => strtoupper($this->cor), 'ativa' => false]);
         }
         $this->showModal = false;
         $this->reload();
@@ -73,7 +81,9 @@ class GestorPalavras extends Component
 
     private function ensureAdmin(): void
     {
-        if (!auth()->user()?->isAdmin()) abort(403);
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
     }
 
     public function render()

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire;
 
 use App\Models\User;
@@ -14,15 +15,20 @@ class GestorUsuarios extends Component
     use WithPagination;
 
     public bool $showModal = false;
+
     public ?int $editingId = null;
+
     public string $name = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $role = 'operador';
 
     public function openCreate(): void
     {
-        $this->reset(['editingId','name','email','password']);
+        $this->reset(['editingId', 'name', 'email', 'password']);
         $this->role = 'operador';
         $this->showModal = true;
     }
@@ -42,14 +48,18 @@ class GestorUsuarios extends Component
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email' . ($this->editingId ? ",{$this->editingId}" : ''),
+            'email' => 'required|email|unique:users,email'.($this->editingId ? ",{$this->editingId}" : ''),
             'role' => 'required|in:admin,operador',
         ];
-        if (!$this->editingId) $rules['password'] = 'required|min:8';
+        if (! $this->editingId) {
+            $rules['password'] = 'required|min:8';
+        }
         $this->validate($rules);
 
-        $data = ['name'=>$this->name,'email'=>$this->email,'role'=>$this->role];
-        if ($this->password) $data['password'] = bcrypt($this->password);
+        $data = ['name' => $this->name, 'email' => $this->email, 'role' => $this->role];
+        if ($this->password) {
+            $data['password'] = bcrypt($this->password);
+        }
 
         $this->editingId ? User::findOrFail($this->editingId)->update($data) : User::create($data);
         $this->showModal = false;

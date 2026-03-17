@@ -1,10 +1,12 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('bcas', function (Blueprint $table) {
@@ -18,7 +20,7 @@ return new class extends Migration {
         });
 
         // Ensure the portuguese_unaccent FTS config exists (idempotent)
-        DB::statement("CREATE EXTENSION IF NOT EXISTS unaccent");
+        DB::statement('CREATE EXTENSION IF NOT EXISTS unaccent');
         DB::statement("
             DO \$\$
             BEGIN
@@ -37,8 +39,8 @@ return new class extends Migration {
             GENERATED ALWAYS AS (to_tsvector('portuguese_unaccent', COALESCE(texto_completo, ''))) STORED
         ");
 
-        DB::statement("CREATE INDEX idx_bcas_texto_tsvector ON bcas USING GIN(texto_tsvector)");
-        DB::statement("CREATE INDEX idx_bcas_data ON bcas(data)");
+        DB::statement('CREATE INDEX idx_bcas_texto_tsvector ON bcas USING GIN(texto_tsvector)');
+        DB::statement('CREATE INDEX idx_bcas_data ON bcas(data)');
     }
 
     public function down(): void

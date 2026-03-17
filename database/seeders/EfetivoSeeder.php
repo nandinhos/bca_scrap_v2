@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use App\Models\Efetivo;
@@ -19,21 +20,21 @@ class EfetivoSeeder extends Seeder
             ['saram' => '6084966', 'nome_guerra' => 'THAIANE BENETTI', 'nome_completo' => 'THAIANE BENETTI CARVALHO DE OLIVEIRA VIEIRA',   'posto' => 'CAP INT',         'email' => 'thaianebenettitbcov@fab.mil.br'],
             ['saram' => '6123120', 'nome_guerra' => 'MACÊDO',          'nome_completo' => 'Rafael MACÊDO Trindade',                        'posto' => 'Cap Eng',         'email' => 'macedormt@fab.mil.br'],
             ['saram' => '6425216', 'nome_guerra' => 'HELANE',          'nome_completo' => 'HELANE Rosario da Cruz Nogueira',               'posto' => 'Cap Int',         'email' => 'helanehrcn@fab.mil.br'],
-            ['saram' => '1673327', 'nome_guerra' => 'NELSON',          'nome_completo' => 'NELSON Rodrigues da Costa Filho',               'posto' => 'Cap QOEA ANV R/1','email' => 'nelsonnrcf@fab.mil.br'],
-            ['saram' => '1645439', 'nome_guerra' => 'SANTI',           'nome_completo' => 'Leandro SANTI da Silva',                        'posto' => 'Cap QOEA SVA R/1','email' => 'santilss@fab.mil.br'],
-            ['saram' => '1985736', 'nome_guerra' => 'MICHETTI',        'nome_completo' => 'Marcos Roberto MICHETTI',                       'posto' => 'Cap QOEA ANV R/1','email' => 'michettimrm@fab.mil.br'],
-            ['saram' => '2603624', 'nome_guerra' => 'OLIVEIRA',        'nome_completo' => 'Robson de OLIVEIRA Parada',                     'posto' => 'Cap QOEA SUP R/1','email' => 'oliveirarop@fab.mil.br'],
+            ['saram' => '1673327', 'nome_guerra' => 'NELSON',          'nome_completo' => 'NELSON Rodrigues da Costa Filho',               'posto' => 'Cap QOEA ANV R/1', 'email' => 'nelsonnrcf@fab.mil.br'],
+            ['saram' => '1645439', 'nome_guerra' => 'SANTI',           'nome_completo' => 'Leandro SANTI da Silva',                        'posto' => 'Cap QOEA SVA R/1', 'email' => 'santilss@fab.mil.br'],
+            ['saram' => '1985736', 'nome_guerra' => 'MICHETTI',        'nome_completo' => 'Marcos Roberto MICHETTI',                       'posto' => 'Cap QOEA ANV R/1', 'email' => 'michettimrm@fab.mil.br'],
+            ['saram' => '2603624', 'nome_guerra' => 'OLIVEIRA',        'nome_completo' => 'Robson de OLIVEIRA Parada',                     'posto' => 'Cap QOEA SUP R/1', 'email' => 'oliveirarop@fab.mil.br'],
             ['saram' => '3448703', 'nome_guerra' => 'MELO',            'nome_completo' => 'Thiago de MELO Rocha',                          'posto' => '1° Ten QOEA ANV', 'email' => 'melotmr@fab.mil.br'],
-            ['saram' => '7391110', 'nome_guerra' => 'CATIANA FARIA',   'nome_completo' => 'CATIANA FARIA DOS SANTOS',                      'posto' => '1° TEN QOCON ADM','email' => 'catianacfs@fab.mil.br'],
-            ['saram' => '7391188', 'nome_guerra' => 'MILITÃO',         'nome_completo' => 'ANGELA de Lima MILITÃO',                        'posto' => '1° Ten QOCon ADM','email' => 'angelamilitaoalm@fab.mil.br'],
-            ['saram' => '7433794', 'nome_guerra' => 'TATIANA ROCHA',   'nome_completo' => 'TATIANA SOUSA DA ROCHA',                        'posto' => '1° TEN QOCON CCO','email' => 'tatianarochatsr@fab.mil.br'],
-            ['saram' => '7432445', 'nome_guerra' => 'MARIANA RODRIGUES','nome_completo' => 'MARIANA RODRIGUES QUEIROZ MOREIRA',            'posto' => '1° TEN QOCON CCO','email' => 'mariana.rodrigues@gmail.com'],
-            ['saram' => '3245926', 'nome_guerra' => 'FRANCO',          'nome_completo' => 'Gustavo Luiz FRANCO',                           'posto' => '1° Ten Esp Aer SUP','email' => 'francoglf@fab.mil.br'],
+            ['saram' => '7391110', 'nome_guerra' => 'CATIANA FARIA',   'nome_completo' => 'CATIANA FARIA DOS SANTOS',                      'posto' => '1° TEN QOCON ADM', 'email' => 'catianacfs@fab.mil.br'],
+            ['saram' => '7391188', 'nome_guerra' => 'MILITÃO',         'nome_completo' => 'ANGELA de Lima MILITÃO',                        'posto' => '1° Ten QOCon ADM', 'email' => 'angelamilitaoalm@fab.mil.br'],
+            ['saram' => '7433794', 'nome_guerra' => 'TATIANA ROCHA',   'nome_completo' => 'TATIANA SOUSA DA ROCHA',                        'posto' => '1° TEN QOCON CCO', 'email' => 'tatianarochatsr@fab.mil.br'],
+            ['saram' => '7432445', 'nome_guerra' => 'MARIANA RODRIGUES', 'nome_completo' => 'MARIANA RODRIGUES QUEIROZ MOREIRA',            'posto' => '1° TEN QOCON CCO', 'email' => 'mariana.rodrigues@gmail.com'],
+            ['saram' => '3245926', 'nome_guerra' => 'FRANCO',          'nome_completo' => 'Gustavo Luiz FRANCO',                           'posto' => '1° Ten Esp Aer SUP', 'email' => 'francoglf@fab.mil.br'],
             ['saram' => '7534710', 'nome_guerra' => 'PRADO',           'nome_completo' => 'Matheus PRADO',                                 'posto' => '2° Ten QOCon PRU', 'email' => 'pradomp@fab.mil.br'],
             ['saram' => '7537301', 'nome_guerra' => 'ANA PRIANTE',     'nome_completo' => 'ANA CLÁUDIA APARECIDA PRIANTE',                 'posto' => '2° TEN QOCON CCO', 'email' => 'anaprianteacap@fab.mil.br'],
             ['saram' => '7623070', 'nome_guerra' => 'CARLA',           'nome_completo' => 'CARLA Pereira Machado Homem',                   'posto' => '2° Ten QOCon ADM', 'email' => 'carlacpmh@fab.mil.br'],
-            ['saram' => '2714710', 'nome_guerra' => 'PROENÇA',         'nome_completo' => 'Rogério da Silva PROENÇA',                      'posto' => '2° Ten Esp Aer SUP','email' => 'proencarsp@fab.mil.br'],
-            ['saram' => '3503186', 'nome_guerra' => 'ALEX SANDRO',     'nome_completo' => 'ALEX SANDRO SOUTO BARBOSA',                     'posto' => '2° TEN ESP AER ANV','email' => 'alexsandroassb@fab.mil.br'],
+            ['saram' => '2714710', 'nome_guerra' => 'PROENÇA',         'nome_completo' => 'Rogério da Silva PROENÇA',                      'posto' => '2° Ten Esp Aer SUP', 'email' => 'proencarsp@fab.mil.br'],
+            ['saram' => '3503186', 'nome_guerra' => 'ALEX SANDRO',     'nome_completo' => 'ALEX SANDRO SOUTO BARBOSA',                     'posto' => '2° TEN ESP AER ANV', 'email' => 'alexsandroassb@fab.mil.br'],
             ['saram' => '2086735', 'nome_guerra' => 'MARTINO',         'nome_completo' => 'Flávio de Souza MARTINO',                       'posto' => 'SO BMA',           'email' => 'martinofsm@fab.mil.br'],
             ['saram' => '2345560', 'nome_guerra' => 'LOBO',            'nome_completo' => 'Marcos Antonio Muniz LOBO',                     'posto' => 'SO BMA',           'email' => 'lobomaml@fab.mil.br'],
             ['saram' => '3372332', 'nome_guerra' => 'SILVIA',          'nome_completo' => 'SILVIA Soares Ferreira Gonçalves',              'posto' => 'SO SAD',           'email' => 'silviassfg@fab.mil.br'],

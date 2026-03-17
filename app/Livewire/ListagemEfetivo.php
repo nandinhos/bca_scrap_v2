@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire;
 
 use App\Models\Efetivo;
@@ -14,23 +15,37 @@ class ListagemEfetivo extends Component
     use WithPagination;
 
     public string $search = '';
+
     public bool $showModal = false;
+
     public ?int $editingId = null;
+
     public string $saram = '';
+
     public string $nomeGuerra = '';
+
     public string $nomeCompleto = '';
+
     public string $posto = '';
+
     public string $especialidade = '';
+
     public string $email = '';
+
     public string $omOrigem = 'GAC-PAC';
+
     public bool $ativo = true;
+
     public bool $oculto = false;
 
-    public function updatedSearch(): void { $this->resetPage(); }
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
 
     public function openCreate(): void
     {
-        $this->reset(['editingId','saram','nomeGuerra','nomeCompleto','posto','especialidade','email','omOrigem','ativo','oculto']);
+        $this->reset(['editingId', 'saram', 'nomeGuerra', 'nomeCompleto', 'posto', 'especialidade', 'email', 'omOrigem', 'ativo', 'oculto']);
         $this->omOrigem = 'GAC-PAC';
         $this->ativo = true;
         $this->showModal = true;
@@ -88,10 +103,9 @@ class ListagemEfetivo extends Component
     {
         return view('livewire.listagem-efetivo', [
             'efetivos' => Efetivo::query()
-                ->when($this->search, fn($q) =>
-                    $q->where('nome_guerra','ilike',"%{$this->search}%")
-                      ->orWhere('nome_completo','ilike',"%{$this->search}%")
-                      ->orWhere('saram','like',"%{$this->search}%"))
+                ->when($this->search, fn ($q) => $q->where('nome_guerra', 'ilike', "%{$this->search}%")
+                    ->orWhere('nome_completo', 'ilike', "%{$this->search}%")
+                    ->orWhere('saram', 'like', "%{$this->search}%"))
                 ->orderBy('nome_guerra')
                 ->paginate(20),
         ]);

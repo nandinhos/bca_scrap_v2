@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Models\Bca;
@@ -15,7 +16,9 @@ class AnalisarEfetivoJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 300;
+
     public array $backoff = [30, 60, 120];
 
     public function __construct(
@@ -36,6 +39,6 @@ class AnalisarEfetivoJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        Log::error("AnalisarEfetivoJob failed for BCA ID {$this->bcaId}: " . $exception->getMessage());
+        Log::error("AnalisarEfetivoJob failed for BCA ID {$this->bcaId}: ".$exception->getMessage());
     }
 }

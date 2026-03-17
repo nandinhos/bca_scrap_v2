@@ -3,9 +3,10 @@
 use App\Livewire\ListagemEfetivo;
 use App\Models\Efetivo;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('pode ser renderizado', function () {
     $admin = User::factory()->create(['role' => 'admin']);

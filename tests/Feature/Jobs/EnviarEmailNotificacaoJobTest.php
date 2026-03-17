@@ -1,12 +1,14 @@
 <?php
+
 use App\Jobs\EnviarEmailNotificacaoJob;
 use App\Mail\NotificacaoBcaMail;
 use App\Models\Bca;
 use App\Models\BcaOcorrencia;
 use App\Models\Efetivo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('sends email to efetivo and marks enviado_em', function () {
     Mail::fake();

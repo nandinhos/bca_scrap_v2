@@ -53,9 +53,9 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 4.1 | Implementar chunking em BcaAnalysisService | Processar efetivos em batches de 100 | [ ] |
-| 4.2 | Adicionar índice no campo saram de Efetivo | Query mais rápida | [ ] |
-| 4.3 | Adicionar índice composto em BcaOcorrencia (bca_id, efetivo_id) | Query mais rápida | [ ] |
+| 4.1 | Implementar chunking em BcaAnalysisService | Processar efetivos em batches de 100 | [x] |
+| 4.2 | Adicionar índice no campo saram de Efetivo | Query mais rápida | [x] |
+| 4.3 | Adicionar índice composto em BcaOcorrencia (bca_id, efetivo_id) | Query mais rápida | [x] |
 
 ---
 
@@ -118,7 +118,7 @@
 SPRINT 1 ██████████████████ 100% ✅
 SPRINT 2 ██████████████████ 100% ✅
 SPRINT 3 ██████████████████ 100% ✅
-SPRINT 4 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 4 ██████████████████ 100% ✅
 SPRINT 5 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░░  0%

@@ -33,50 +33,47 @@ class BcaAnalysisService
         $count = 0;
         $keywordsEncontradas = [];
 
-        // 1. Search efetivos
-        $efetivos = Efetivo::ativo()->get();
-        foreach ($efetivos as $efetivo) {
-            $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
+        // 1. Search efetivos with chunking for better performance
+        Efetivo::ativo()->chunkById(100, function ($efetivos) use ($textoBca, $bca, &$count) {
+            foreach ($efetivos as $efetivo) {
+                $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
 
-            if ($matchedTerm) {
-                // User wants highlight specifically on FULL NAME in the preview
-                $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
+                if ($matchedTerm) {
+                    $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
 
-                // Determine total quantity (max mentions to avoid double counting name+saram on same line)
-                $textoMaiusc = strtoupper($textoBca);
-                $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
-                             mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
-                $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
+                    $textoMaiusc = strtoupper($textoBca);
+                    $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
+                                 mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
+                    $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
 
-                $quantidade = max($countSaram, $countNome);
-                if ($quantidade === 0) {
-                    $quantidade = 1;
-                }
-
-                // Determine match type for the UI badges
-                $tipoMatch = 'NOME';
-
-                if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
-                    $tipoMatch = 'SARAM';
-                    // Check if name also appears to show "SARAM + NOME"
-                    if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
-                        $tipoMatch = 'SARAM + NOME';
+                    $quantidade = max($countSaram, $countNome);
+                    if ($quantidade === 0) {
+                        $quantidade = 1;
                     }
-                }
 
-                $ocorrencia = BcaOcorrencia::updateOrCreate(
-                    ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
-                    ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
-                );
+                    $tipoMatch = 'NOME';
 
-                if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
-                    if ($ocorrencia->wasRecentlyCreated) {
-                        $count++;
+                    if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
+                        $tipoMatch = 'SARAM';
+                        if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
+                            $tipoMatch = 'SARAM + NOME';
+                        }
                     }
-                    event(new MilitarEncontradoEvent($ocorrencia));
+
+                    $ocorrencia = BcaOcorrencia::updateOrCreate(
+                        ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
+                        ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
+                    );
+
+                    if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
+                        if ($ocorrencia->wasRecentlyCreated) {
+                            $count++;
+                        }
+                        event(new MilitarEncontradoEvent($ocorrencia));
+                    }
                 }
             }
-        }
+        });
 
         // 2. Search keywords (either provided or active in DB)
         $keywords = ! empty($keywordsToSearch)

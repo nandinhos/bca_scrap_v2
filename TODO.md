@@ -40,10 +40,10 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 3.1 | Fortalecer validação de data em BuscaBca.php | Validar Y-m-d e datas futuras | [ ] |
-| 3.2 | Adicionar rate limiting na busca | Máximo 5 requisições/min | [ ] |
-| 3.3 | Melhorar mensagem de timeout (6min → 3min) | Usuário entende melhor | [ ] |
-| 3.4 | Adicionar loading state visual | Feedback claro durante loading | [ ] |
+| 3.1 | Fortalecer validação de data em BuscaBca.php | Validar Y-m-d e datas futuras | [x] |
+| 3.2 | Adicionar rate limiting na busca | Máximo 5 requisições/min | [x] |
+| 3.3 | Melhorar mensagem de timeout (6min → 3min) | Usuário entende melhor | [x] |
+| 3.4 | Adicionar loading state visual | Feedback claro durante loading | [x] |
 
 ---
 
@@ -117,7 +117,7 @@
 ```
 SPRINT 1 ██████████████████ 100% ✅
 SPRINT 2 ██████████████████ 100% ✅
-SPRINT 3 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 3 ██████████████████ 100% ✅
 SPRINT 4 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 5 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░░  0%

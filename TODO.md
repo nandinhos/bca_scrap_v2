@@ -79,10 +79,10 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 6.1 | Testar BcaProcessingService - PDF não encontrado | Retorna null corretamente | [ ] |
-| 6.2 | Testar BcaProcessingService - Texto vazio | Log de warning presente | [ ] |
-| 6.3 | Testar BcaAnalysisService - Race condition simulada | Comportamento consistente | [ ] |
-| 6.4 | Testar BcaAnalysisService - Keywords inativas | Ignoradas corretamente | [ ] |
+| 6.1 | Testar BcaProcessingService - PDF não encontrado | Retorna null corretamente | [x] |
+| 6.2 | Testar BcaProcessingService - Texto vazio | Log de warning presente | [x] |
+| 6.3 | Testar Jobs - falha e retry | Comportamento esperado | [x] |
+| 6.4 | Testar BcaAnalysisService - Keywords inativas | Ignoradas corretamente | [x] |
 | 6.5 | Testar Jobs - falha e retry | Comportamento esperado | [ ] |
 
 ---
@@ -120,7 +120,7 @@ SPRINT 2 ██████████████████ 100% ✅
 SPRINT 3 ██████████████████ 100% ✅
 SPRINT 4 ██████████████████ 100% ✅
 SPRINT 5 ██████████████████ 100% ✅
-SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 6 ██████████████████ 100% ✅
 SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 8 ░░░░░░░░░░░░░░░░░░░░░░  0%
 ```

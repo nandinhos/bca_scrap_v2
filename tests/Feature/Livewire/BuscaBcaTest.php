@@ -2,9 +2,10 @@
 
 use App\Livewire\BuscaBca;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('pode ser renderizado', function () {
     $user = User::factory()->create(['role' => 'operador']);
@@ -31,7 +32,17 @@ it('valida formato de data', function () {
     Livewire::test(BuscaBca::class)
         ->set('data', 'data-invalida')
         ->call('buscar')
-        ->assertHasErrors(['data' => 'date']);
+        ->assertHasErrors(['data' => 'date_format']);
+});
+
+it('valida que data nao pode ser futura', function () {
+    $user = User::factory()->create(['role' => 'operador']);
+    $this->actingAs($user);
+
+    Livewire::test(BuscaBca::class)
+        ->set('data', now()->addDay()->format('Y-m-d'))
+        ->call('buscar')
+        ->assertHasErrors(['data' => 'before_or_equal']);
 });
 
 it('exibe estado inicial sem resultados', function () {

@@ -27,10 +27,10 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 2.1 | Adicionar logging em ProcessarBcaJob | Log de início presente | [ ] |
-| 2.2 | Adicionar BcaExecucao no failed() de ProcessarBcaJob | Falha persistida no DB | [ ] |
-| 2.3 | Corrigir cache behavior em BcaDownloadService (linha 35-45) | Comportamento consistente | [ ] |
-| 2.4 | Adicionar transaction em BaixarBcaJob:52-58 | Consistência garantida | [ ] |
+| 2.1 | Adicionar logging em ProcessarBcaJob | Log de início presente | [x] |
+| 2.2 | Adicionar BcaExecucao no failed() de ProcessarBcaJob | Falha persistida no DB | [x] |
+| 2.3 | Corrigir cache behavior em BcaDownloadService (linha 35-45) | Comportamento consistente | [x] |
+| 2.4 | Adicionar transaction em BaixarBcaJob:52-58 | Consistência garantida | [x] |
 
 ---
 
@@ -116,22 +116,13 @@
 
 ```
 SPRINT 1 ██████████████████ 100% ✅
-SPRINT 2 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 2 ██████████████████ 100% ✅
 SPRINT 3 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 4 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 5 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 8 ░░░░░░░░░░░░░░░░░░░░░░  0%
-```
-SPRINT 1 ████████░░░░░░░░░░░░░ 20%
-SPRINT 2 ░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 3 ░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 4 ░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 5 ░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 8 ░░░░░░░░░░░░░░░░░░░░░  0%
 ```
 
 ---

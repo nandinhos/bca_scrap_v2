@@ -1,10 +1,18 @@
 <?php
+
 namespace App\Livewire;
 
 use App\Jobs\BaixarBcaJob;
 use App\Jobs\EnviarEmailNotificacaoJob;
 use App\Models\Bca;
+use App\Models\BcaExecucao;
 use App\Models\BcaOcorrencia;
+use App\Models\PalavraChave;
+use App\Services\BcaAnalysisService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -14,22 +22,47 @@ use Livewire\Component;
 class BuscaBca extends Component
 {
     public string $data = '';
+
     public ?int $bcaId = null;
+
     public array $ocorrencias = [];
+
     public array $palavrasDisponiveis = [];
-    public array $palavrasSelecionadas = []; // Stores the words themselves
-    public array $keywordsEncontradas = [];  // Stores stats/counts
+
+    public array $palavrasSelecionadas = [];
+
+    public array $keywordsEncontradas = [];
+
     public bool $buscando = false;
+
     public ?string $mensagem = null;
+
     public string $mensagemTipo = 'info';
+
     public ?string $pdfUrl = null;
+
     public int $pollCount = 0;
+
+    protected function rules(): array
+    {
+        return [
+            'data' => 'required|date_format:Y-m-d|before_or_equal:today',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'data.required' => 'A data é obrigatória.',
+            'data.date_format' => 'O formato da data deve ser AAAA-MM-DD.',
+            'data.before_or_equal' => 'A data não pode ser futura.',
+        ];
+    }
 
     public function mount(): void
     {
         $this->data = now()->format('Y-m-d');
-        $this->palavrasDisponiveis = \App\Models\PalavraChave::orderBy('palavra')->get()->toArray();
-        // By default, all disabled (palavrasSelecionadas remains empty)
+        $this->palavrasDisponiveis = PalavraChave::orderBy('palavra')->get()->toArray();
     }
 
     public function togglePalavra(string $palavra): void
@@ -43,7 +76,15 @@ class BuscaBca extends Component
 
     public function buscar(): void
     {
-        $this->validate(['data' => 'required|date']);
+        $this->validate();
+
+        if (! $this->verificarRateLimit()) {
+            $this->mensagem = 'Muitas tentativas. Aguarde 1 minuto.';
+            $this->mensagemTipo = 'error';
+
+            return;
+        }
+
         $this->ocorrencias = [];
         $this->bcaId = null;
         $this->pdfUrl = null;
@@ -52,36 +93,43 @@ class BuscaBca extends Component
         $this->buscando = true;
     }
 
+    private function verificarRateLimit(): bool
+    {
+        $key = 'busca-bca:'.($this->data ?? 'default');
+
+        return RateLimiter::attempt($key, 5, fn () => true, 60);
+    }
+
     public function executarBusca(): void
     {
-        if (!$this->buscando) return;
+        if (! $this->buscando) {
+            return;
+        }
 
-        // Cache hit — already processed and analyzed
-        $bca = \App\Models\Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
+        $bca = Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
         if ($bca) {
-            // Re-run analysis to ensure missing emails are sent and use selected keywords
-            app(\App\Services\BcaAnalysisService::class)->analisar($bca, 'manual', $this->palavrasSelecionadas);
+            app(BcaAnalysisService::class)->analisar($bca, 'manual', $this->palavrasSelecionadas);
             $this->finalizarBusca($bca);
+
             return;
         }
 
         try {
-            \App\Jobs\BaixarBcaJob::dispatch($this->data, $this->palavrasSelecionadas);
-            $this->mensagem = "Iniciada busca e download do BCA...";
+            BaixarBcaJob::dispatch($this->data, $this->palavrasSelecionadas);
+            $this->mensagem = 'Iniciada busca e download do BCA...';
             $this->mensagemTipo = 'info';
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("BuscaBca dispatch job failed: " . $e->getMessage());
-            $this->mensagem = "Erro ao iniciar busca.";
+            Log::error('BuscaBca dispatch job failed: '.$e->getMessage());
+            $this->mensagem = 'Erro ao iniciar busca.';
             $this->mensagemTipo = 'error';
             $this->buscando = false;
         }
 
-        $bca = \App\Models\Bca::where('data', $this->data)->whereNotNull('processado_em')->first();
+        $bca = Bca::where('data', $this->data)->whereNotNull('processado_em')->first();
         if ($bca) {
             $this->finalizarBusca($bca);
         } else {
-            // Check if it's already known to be missing
-            $execucao = \App\Models\BcaExecucao::where('status', 'sem_bca')
+            $execucao = BcaExecucao::where('status', 'sem_bca')
                 ->where('mensagem', 'like', "%{$this->data}%")
                 ->latest()->first();
 
@@ -90,8 +138,7 @@ class BuscaBca extends Component
                 $this->mensagemTipo = 'warning';
                 $this->buscando = false;
             } else {
-                // Keep buscando=true and let wire:poll handle checkStatus
-                $this->mensagem = "Download concluído, extraindo informações...";
+                $this->mensagem = 'Download concluído, extraindo informações...';
                 $this->mensagemTipo = 'info';
             }
         }
@@ -99,25 +146,28 @@ class BuscaBca extends Component
 
     public function checkStatus(): void
     {
-        if (!$this->buscando || $this->bcaId) return;
+        if (! $this->buscando || $this->bcaId) {
+            return;
+        }
 
         $this->pollCount++;
 
-        // Timeout after 120 polls × 3s = 6 minutes
-        if ($this->pollCount > 120) {
-            $this->mensagem = 'Tempo limite excedido. O arquivo é grande e ainda está sendo processado em segundo plano. Tente atualizar a página em instantes.';
+        if ($this->pollCount > 60) {
+            $this->mensagem = 'Tempo limite excedido (3min). O arquivo pode estar sendo processado em segundo plano. Atualize a página em instantes.';
             $this->mensagemTipo = 'warning';
             $this->buscando = false;
+
             return;
         }
 
-        $bca = \App\Models\Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
+        $bca = Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
         if ($bca) {
             $this->finalizarBusca($bca);
+
             return;
         }
 
-        $execucao = \App\Models\BcaExecucao::where('data_execucao', '>=', now()->subMinutes(5))
+        $execucao = BcaExecucao::where('data_execucao', '>=', now()->subMinutes(5))
             ->where('mensagem', 'like', "%{$this->data}%")
             ->latest()->first();
 
@@ -126,27 +176,26 @@ class BuscaBca extends Component
             $this->mensagemTipo = 'warning';
             $this->buscando = false;
         } elseif ($execucao?->status === 'falha') {
-            $this->mensagem = "Falha no processamento.";
+            $this->mensagem = 'Falha no processamento.';
             $this->mensagemTipo = 'error';
             $this->buscando = false;
         }
     }
 
-    private function finalizarBusca(\App\Models\Bca $bca): void
+    private function finalizarBusca(Bca $bca): void
     {
         $this->bcaId = $bca->id;
-        $this->pdfUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($bca->url);
-        
-        $this->ocorrencias = \App\Models\BcaOcorrencia::with('efetivo')
+        $this->pdfUrl = Storage::disk('public')->url($bca->url);
+
+        $this->ocorrencias = BcaOcorrencia::with('efetivo')
             ->where('bca_id', $bca->id)
-            ->get()->map(function($oc) {
+            ->get()->map(function ($oc) {
                 return array_merge($oc->toArray(), [
-                    'saram' => $oc->efetivo->saram
+                    'saram' => $oc->efetivo->saram,
                 ]);
             })->toArray();
 
-        // Retrieve keyword counts from Cache (stored by BcaAnalysisService)
-        $cacheData = \Illuminate\Support\Facades\Cache::get("bca:analise:{$bca->data->format('Y-m-d')}");
+        $cacheData = Cache::get("bca:analise:{$bca->data->format('Y-m-d')}");
         $this->keywordsEncontradas = $cacheData['keywords'] ?? [];
 
         $n = count($this->ocorrencias);
@@ -158,15 +207,15 @@ class BuscaBca extends Component
     public function enviarEmail(int $ocorrenciaId): void
     {
         $oc = BcaOcorrencia::find($ocorrenciaId);
-        if ($oc && !$oc->foiEnviado()) {
+        if ($oc && ! $oc->foiEnviado()) {
             EnviarEmailNotificacaoJob::dispatch($ocorrenciaId);
-            $this->mensagem = 'Email enviado para ' . $oc->efetivo->nome_guerra;
+            $this->mensagem = 'Email enviado para '.$oc->efetivo->nome_guerra;
             $this->mensagemTipo = 'success';
             if ($this->bcaId) {
                 $this->ocorrencias = BcaOcorrencia::with('efetivo')
-                    ->where('bca_id', $this->bcaId)->get()->map(function($oc) {
+                    ->where('bca_id', $this->bcaId)->get()->map(function ($oc) {
                         return array_merge($oc->toArray(), [
-                            'saram' => $oc->efetivo->saram
+                            'saram' => $oc->efetivo->saram,
                         ]);
                     })->toArray();
             }
@@ -175,7 +224,9 @@ class BuscaBca extends Component
 
     public function enviarTodos(): void
     {
-        if (!$this->bcaId) return;
+        if (! $this->bcaId) {
+            return;
+        }
 
         $count = 0;
         $pendentes = BcaOcorrencia::where('bca_id', $this->bcaId)
@@ -192,7 +243,7 @@ class BuscaBca extends Component
             $this->mensagemTipo = 'success';
             $this->finalizarBusca(Bca::find($this->bcaId));
         } else {
-            $this->mensagem = "Nenhum email pendente para enviar.";
+            $this->mensagem = 'Nenhum email pendente para enviar.';
             $this->mensagemTipo = 'info';
         }
     }

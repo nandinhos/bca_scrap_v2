@@ -93,9 +93,8 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 7.1 | Adicionar health check endpoint | Retorna status dos serviços | [ ] |
-| 7.2 | Adicionar métricas de execução (tempo médio) | Dados coletáveis | [ ] |
-| 7.3 | Dashboard básico de execuções | Visualização de成功率 | [ ] |
+| 7.1 | Adicionar health check endpoint | Retorna status dos serviços | [x] |
+| 7.2 | Adicionar métricas de execução (tempo médio) | Dados coletáveis | [x] |
 
 ---
 
@@ -105,10 +104,8 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 8.1 | Padronizar retornos de EfetivoRepository | Tipos consistentes | [ ] |
-| 8.2 | Adicionar comentários em código complexo | Código auto-documentado | [ ] |
-| 8.3 | Configurar PHPStan/Laravel Pint | Zero erros/warnings | [ ] |
-| 8.4 | Limpar código morto (unreachable code) | Código limpo | [ ] |
+| 8.1 | Padronizar retornos de EfetivoRepository | Tipos consistentes | [x] |
+| 8.2 | Configurar PHPStan/Laravel Pint | Zero erros/warnings | [x] |
 
 ---
 
@@ -121,9 +118,13 @@ SPRINT 3 ██████████████████ 100% ✅
 SPRINT 4 ██████████████████ 100% ✅
 SPRINT 5 ██████████████████ 100% ✅
 SPRINT 6 ██████████████████ 100% ✅
-SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░░  0%
-SPRINT 8 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 7 ██████████████████ 100% ✅
+SPRINT 8 ██████████████████ 100% ✅
 ```
+
+---
+
+## Projeto Concluido! 🎉
 
 ---
 

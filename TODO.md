@@ -65,11 +65,11 @@
 
 | # | Tarefa | Critério de Aceite | Status |
 |---|--------|-------------------|--------|
-| 5.1 | Criar factory BcaOcorrencia | Factory utilizável em testes | [ ] |
-| 5.2 | Criar factory BcaExecucao | Factory utilizável em testes | [ ] |
-| 5.3 | Testar EnsureRole middleware | 403 retornado corretamente | [ ] |
-| 5.4 | Testar validação de data em BuscaBca | Dados inválidos rejeitados | [ ] |
-| 5.5 | Corrigir teste skipado (BcaDownloadServiceTest:59) | Teste executável | [ ] |
+| 5.1 | Criar factory BcaOcorrencia | Factory utilizável em testes | [x] |
+| 5.2 | Criar factory BcaExecucao | Factory utilizável em testes | [x] |
+| 5.3 | Testar EnsureRole middleware | 403 retornado corretamente | [x] |
+| 5.4 | Testar validação de data em BuscaBca | Dados inválidos rejeitados | [x] |
+| 5.5 | Corrigir teste skipado (BcaDownloadServiceTest:59) | Teste executável | [x] |
 
 ---
 
@@ -119,7 +119,7 @@ SPRINT 1 ██████████████████ 100% ✅
 SPRINT 2 ██████████████████ 100% ✅
 SPRINT 3 ██████████████████ 100% ✅
 SPRINT 4 ██████████████████ 100% ✅
-SPRINT 5 ░░░░░░░░░░░░░░░░░░░░░░  0%
+SPRINT 5 ██████████████████ 100% ✅
 SPRINT 6 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 7 ░░░░░░░░░░░░░░░░░░░░░░  0%
 SPRINT 8 ░░░░░░░░░░░░░░░░░░░░░░  0%

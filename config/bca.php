@@ -9,4 +9,6 @@ return [
     'search_timeout' => (int) env('BCA_SEARCH_TIMEOUT', 10),
     'search_retry' => (int) env('BCA_SEARCH_RETRY', 2),
     'max_pdf_size_mb' => (int) env('BCA_MAX_PDF_SIZE_MB', 50),
+    // SAD email para envio do compilado
+    'sad_email' => env('BCA_SAD_EMAIL', 'sad.gacpac@fab.mil.br'),
 ];

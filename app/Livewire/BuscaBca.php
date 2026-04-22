@@ -108,7 +108,6 @@ class BuscaBca extends Component
 
         $bca = Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
         if ($bca) {
-            app(BcaAnalysisService::class)->analisar($bca, 'manual', $this->palavrasSelecionadas);
             $this->finalizarBusca($bca);
 
             return;

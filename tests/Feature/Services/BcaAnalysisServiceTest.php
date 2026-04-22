@@ -5,6 +5,7 @@ use App\Models\BcaExecucao;
 use App\Models\BcaOcorrencia;
 use App\Models\Efetivo;
 use App\Models\PalavraChave;
+use App\Models\Unidade;
 use App\Services\BcaAnalysisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -13,6 +14,12 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Cache::flush();
+    $this->unidade = Unidade::create([
+        'nome' => 'Grupo de Aviação',
+        'sigla' => 'GAC-PAC',
+        'codigo' => 'GAC-PAC',
+        'ativo' => true,
+    ]);
 });
 
 it('detects efetivo by SARAM in BCA text', function () {
@@ -22,6 +29,7 @@ it('detects efetivo by SARAM in BCA text', function () {
         'nome_completo' => 'NOME TESTEIRO DA SILVA',
         'ativo' => true,
         'oculto' => false,
+        'unidade_id' => $this->unidade->id,
     ]);
 
     $bca = Bca::factory()->create([
@@ -42,6 +50,7 @@ it('detects efetivo by hyphenated SARAM', function () {
         'nome_completo' => 'NOME TESTEIRO DA SILVA',
         'ativo' => true,
         'oculto' => false,
+        'unidade_id' => $this->unidade->id,
     ]);
 
     $bca = Bca::factory()->create([
@@ -80,6 +89,7 @@ it('does not create duplicate occurrences', function () {
         'nome_completo' => 'NOME TESTEIRO DA SILVA',
         'ativo' => true,
         'oculto' => false,
+        'unidade_id' => $this->unidade->id,
     ]);
 
     $bca = Bca::factory()->create([

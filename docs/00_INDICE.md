@@ -37,6 +37,12 @@
 | [07 - Docker e Infraestrutura](07_DOCKER_INFRAESTRUTURA.md) | Dockerfiles, nginx, supervisor, compose completo | 15 min |
 | [08 - Testes](08_TESTES.md) | Pest PHP, metas revisadas (60%+ Livewire), exemplos | 15 min |
 
+### 4. Relatórios de Desenvolvimento
+
+| Documento | Descrição | Tempo Leitura |
+|-----------|-----------|---------------|
+| [LIÇÕES APRENDIDAS](LICOES_APRENDIDAS.md) | Registro de problemas resolvidos e correções aplicadas | 10 min |
+
 ### 4. Implantação
 
 | Documento | Descrição | Tempo Leitura |

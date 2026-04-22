@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Events\MilitarEncontradoEvent;
+use App\Jobs\EnviarCompiladoSADJob;
 use App\Models\Bca;
 use App\Models\BcaExecucao;
 use App\Models\BcaOcorrencia;
 use App\Models\Efetivo;
 use App\Models\PalavraChave;
+use App\Models\Unidade;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -34,46 +36,53 @@ class BcaAnalysisService
         $keywordsEncontradas = [];
 
         // 1. Search efetivos with chunking for better performance
-        Efetivo::ativo()->chunkById(100, function ($efetivos) use ($textoBca, $bca, &$count) {
-            foreach ($efetivos as $efetivo) {
-                $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
+        // Filter: ativo, not oculto, AND belongs to an active unidade
+        $unidadesAtivas = Unidade::ativa()->pluck('id');
+        Efetivo::ativo()
+            ->where(function ($q) use ($unidadesAtivas) {
+                $q->whereHas('unidade', fn ($q2) => $q2->whereIn('id', $unidadesAtivas))
+                  ->orWhereDoesntHave('unidade');
+            })
+            ->chunkById(100, function ($efetivos) use ($textoBca, $bca, &$count) {
+                foreach ($efetivos as $efetivo) {
+                    $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
 
-                if ($matchedTerm) {
-                    $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
+                    if ($matchedTerm) {
+                        $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
 
-                    $textoMaiusc = strtoupper($textoBca);
-                    $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
-                                 mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
-                    $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
+                        $textoMaiusc = strtoupper($textoBca);
+                        $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
+                                     mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
+                        $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
 
-                    $quantidade = max($countSaram, $countNome);
-                    if ($quantidade === 0) {
-                        $quantidade = 1;
-                    }
-
-                    $tipoMatch = 'NOME';
-
-                    if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
-                        $tipoMatch = 'SARAM';
-                        if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
-                            $tipoMatch = 'SARAM + NOME';
+                        $quantidade = max($countSaram, $countNome);
+                        if ($quantidade === 0) {
+                            $quantidade = 1;
                         }
-                    }
 
-                    $ocorrencia = BcaOcorrencia::updateOrCreate(
-                        ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
-                        ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
-                    );
+                        $tipoMatch = 'NOME';
 
-                    if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
-                        if ($ocorrencia->wasRecentlyCreated) {
-                            $count++;
+                        if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
+                            $tipoMatch = 'SARAM';
+                            if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
+                                $tipoMatch = 'SARAM + NOME';
+                            }
                         }
-                        event(new MilitarEncontradoEvent($ocorrencia));
+
+                        $ocorrencia = BcaOcorrencia::updateOrCreate(
+                            ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
+                            ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
+                        );
+
+                        if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
+                            if ($ocorrencia->wasRecentlyCreated) {
+                                $count++;
+                            }
+                            event(new MilitarEncontradoEvent($ocorrencia));
+                        }
                     }
                 }
-            }
-        });
+            });
 
         // 2. Search keywords (either provided or active in DB)
         $keywords = ! empty($keywordsToSearch)
@@ -107,6 +116,11 @@ class BcaAnalysisService
 
         $bca->update(['analisado_em' => now()]);
 
+        // 4. Dispatch compiled report to SAD (after all individual emails are dispatched)
+        if ($count > 0) {
+            EnviarCompiladoSADJob::dispatch($bca->id)->afterCommit();
+        }
+
         return $count;
     }
 
@@ -128,7 +142,7 @@ class BcaAnalysisService
         }
 
         // 3. Strict Full Name match (ONLY IF SARAM NOT FOUND)
-        if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
+        if (mb_stripos($textoUpper, $nomeCompleto) !== false) {
             return $efetivo->nome_completo;
         }
 

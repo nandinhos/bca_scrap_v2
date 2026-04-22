@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Efetivo extends Model
@@ -13,6 +14,7 @@ class Efetivo extends Model
     protected $fillable = [
         'saram', 'nome_guerra', 'nome_completo', 'posto',
         'especialidade', 'email', 'om_origem', 'ativo', 'oculto',
+        'unidade_id',
     ];
 
     protected function casts(): array
@@ -26,6 +28,11 @@ class Efetivo extends Model
     public function ocorrencias(): HasMany
     {
         return $this->hasMany(BcaOcorrencia::class);
+    }
+
+    public function unidade(): BelongsTo
+    {
+        return $this->belongsTo(Unidade::class);
     }
 
     public function scopeAtivo($query)

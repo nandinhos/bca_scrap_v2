@@ -9,9 +9,11 @@ use App\Models\BcaExecucao;
 use App\Models\BcaOcorrencia;
 use App\Models\PalavraChave;
 use App\Services\BcaAnalysisService;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -42,6 +44,16 @@ class BuscaBca extends Component
     public ?string $pdfUrl = null;
 
     public int $pollCount = 0;
+
+    public bool $showPreviewModal = false;
+
+    public ?int $previewOcorrenciaId = null;
+
+    public array $previewData = [];
+
+    public bool $enviandoEmail = false;
+
+    public ?string $notification = null;
 
     protected function rules(): array
     {
@@ -205,11 +217,13 @@ class BuscaBca extends Component
 
     public function enviarEmail(int $ocorrenciaId): void
     {
+        $this->showPreviewModal = false;
+        $this->enviandoEmail = true;
+
         $oc = BcaOcorrencia::find($ocorrenciaId);
         if ($oc && ! $oc->foiEnviado()) {
             EnviarEmailNotificacaoJob::dispatch($ocorrenciaId);
-            $this->mensagem = 'Email enviado para '.$oc->efetivo->nome_guerra;
-            $this->mensagemTipo = 'success';
+            $this->notification = "✓ Email enviado para {$oc->efetivo->nome_guerra}";
             if ($this->bcaId) {
                 $this->ocorrencias = BcaOcorrencia::with('efetivo')
                     ->where('bca_id', $this->bcaId)->get()->map(function ($oc) {
@@ -219,6 +233,32 @@ class BuscaBca extends Component
                     })->toArray();
             }
         }
+        $this->enviandoEmail = false;
+    }
+
+    public function forcarEnvioEmail(int $ocorrenciaId): void
+    {
+        $this->showPreviewModal = false;
+        $this->enviandoEmail = true;
+
+        $oc = BcaOcorrencia::find($ocorrenciaId);
+        if ($oc) {
+            try {
+                Bus::dispatchNow(new EnviarEmailNotificacaoJob($ocorrenciaId));
+                $this->notification = "✓ Email enviado com sucesso para {$oc->efetivo->nome_guerra}";
+            } catch (\Exception $e) {
+                $this->notification = "✗ Falha ao enviar email: {$e->getMessage()}";
+            }
+            if ($this->bcaId) {
+                $this->ocorrencias = BcaOcorrencia::with('efetivo')
+                    ->where('bca_id', $this->bcaId)->get()->map(function ($oc) {
+                        return array_merge($oc->toArray(), [
+                            'saram' => $oc->efetivo->saram,
+                        ]);
+                    })->toArray();
+            }
+        }
+        $this->enviandoEmail = false;
     }
 
     public function enviarTodos(): void
@@ -245,6 +285,36 @@ class BuscaBca extends Component
             $this->mensagem = 'Nenhum email pendente para enviar.';
             $this->mensagemTipo = 'info';
         }
+    }
+
+    public function abrirPreview(int $ocorrenciaId): void
+    {
+        $this->previewOcorrenciaId = $ocorrenciaId;
+        $this->previewData = $this->previsualizarEmail($ocorrenciaId);
+        $this->showPreviewModal = true;
+    }
+
+    public function previsualizarEmail(int $ocorrenciaId): array
+    {
+        $oc = BcaOcorrencia::with(['efetivo', 'bca'])->findOrFail($ocorrenciaId);
+
+        if (empty($oc->efetivo->email)) {
+            return ['error' => 'Email não cadastrado para este militar'];
+        }
+
+        return [
+            'id' => $oc->id,
+            'email_destino' => $oc->efetivo->email,
+            'nome_militar' => $oc->efetivo->nome_guerra,
+            'posto' => $oc->efetivo->posto,
+            'saram' => $oc->efetivo->saram,
+            'bca_numero' => $oc->bca->numero,
+            'bca_data' => $oc->bca->data->format('d/m/Y'),
+            'snippet' => $oc->snippet,
+            'tipo_match' => $oc->tipo_match,
+            'quantidade' => $oc->quantidade,
+            'foi_enviado' => $oc->foiEnviado(),
+        ];
     }
 
     public function render()

@@ -45,12 +45,17 @@ class EnviarEmailNotificacaoJob implements ShouldQueue
             return;
         }
 
-        Mail::to($ocorrencia->efetivo->email)
-            ->send(new NotificacaoBcaMail($ocorrencia));
+        try {
+            Mail::to($ocorrencia->efetivo->email)
+                ->send(new NotificacaoBcaMail($ocorrencia));
 
-        $ocorrencia->update(['enviado_em' => now()]);
+            $ocorrencia->update(['enviado_em' => now()]);
 
-        Log::info("EnviarEmailNotificacaoJob: email sent to {$ocorrencia->efetivo->email}");
+            Log::info("EnviarEmailNotificacaoJob: email sent to {$ocorrencia->efetivo->email}");
+        } catch (\Exception $e) {
+            Log::error("EnviarEmailNotificacaoJob: failed to send email to {$ocorrencia->efetivo->email}: ".$e->getMessage());
+            throw $e;
+        }
     }
 
     public function failed(\Throwable $exception): void

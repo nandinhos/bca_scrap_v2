@@ -1,4 +1,28 @@
-<div style="max-width:860px">
+<div style="max-width:860px;position:relative">
+
+    {{-- Notificação Flutuante --}}
+    @if(session('notification') || $notification)
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+         style="position:fixed;top:20px;right:20px;z-index:9999;padding:16px 24px;border-radius:10px;
+                background:{{ (session('notification.type') ?? 'success') === 'success' ? '#059669' : ((session('notification.type') ?? 'success') === 'error' ? '#dc2626' : '#2563eb') }};
+                color:white;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:400px"
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4"
+         x-transition:enter-end="opacity-100 transform translate-x-0" x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+            <div style="display:flex;align-items:center;gap:12px">
+                @if((session('notification.type') ?? 'success') === 'success')
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                @else
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                @endif
+                <span>{{ session('notification.message') ?? $notification }}</span>
+            </div>
+    </div>
+    @endif
 
     {{-- Card de Palavras-Chave --}}
     @if(count($palavrasDisponiveis) > 0)
@@ -116,6 +140,13 @@
                             {{ $oc['tipo_match'] }}
                         </span>
 
+                        {{-- Preview --}}
+                        <button wire:click="abrirPreview({{ $oc['id'] }})"
+                                style="font-size:12px;font-weight:600;color:#7c3aed;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer"
+                                onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#f5f3ff'">
+                            🔍
+                        </button>
+
                         {{-- Email --}}
                         @if($oc['enviado_em'])
                             <span style="font-size:11px;color:#c2410c;font-weight:600;background:#fff7ed;padding:3px 10px;border-radius:20px;border:1px solid #ffedd5">
@@ -129,11 +160,11 @@
                             </button>
                         @endif
 
-                        {{-- Toggle prévia --}}
+{{-- Toggle prévia --}}
                         <button @click="open = !open"
                                 style="font-size:12px;font-weight:600;color:#64748b;background:white;border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 10px;cursor:pointer"
                                 onmouseover="this.style.borderColor='#94a3b8'" onmouseout="this.style.borderColor='#e2e8f0'">
-                            <span x-show="!open">▾ Prévia</span>
+                            <span x-show="!open">▾ Texto</span>
                             <span x-show="open">▴ Fechar</span>
                         </button>
                     </div>
@@ -142,11 +173,89 @@
                 {{-- Snippet colapsável --}}
                 <div x-show="open" x-collapse
                      style="background:#f8fafc;border-top:1px dashed #e2e8f0;padding:16px 20px">
-                    <pre style="margin:0;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#334155;white-space:pre-wrap;border-left:3px solid #3b82f6;padding-left:14px">{!! $oc['snippet'] !!}</pre>
+                    <pre style="margin:0;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#334155;white-space:pre-wrap;border-left:3px solid #3b82f6;padding-left:14px">{!! strip_tags($oc['snippet']) !!}</pre>
+                    @if(!empty($oc['bca_url']))
+                        <a href="{{ $oc['bca_url'] }}" target="_blank" style="color:#2563eb;font-weight:500;margin-top:8px;display:inline-block">→ Ver BCA</a>
+                    @endif
                 </div>
             </div>
             @endforeach
         </div>
+    @endif
+
+    {{-- Modal de Preview --}}
+    @if($showPreviewModal)
+    <div style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5)"
+         x-data="{ show: true }" x-show="show" x-transition>
+        <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:600px;margin:16px;max-height:90vh;overflow-y:auto"
+             @click.away="show = false; @this.set('showPreviewModal', false)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+                <h3 style="font-size:15px;font-weight:600;color:#1e293b;margin:0">
+                    📧 Preview — Email para {{ $previewData['nome_militar'] ?? '' }}
+                </h3>
+                <button wire:click="forcarEnvioEmail({{ $previewData['id'] ?? 0 }})"
+                        style="padding:8px 16px;background:#059669;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"
+                        @if($enviandoEmail) disabled @endif
+                        onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                    @if($enviandoEmail)
+                        <span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Enviando...
+                    @else
+                        📤 Enviar Email
+                    @endif
+                </button>
+            </div>
+
+            @if(isset($previewData['error']))
+                <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;color:#991b1b">
+                    {{ $previewData['error'] }}
+                </div>
+            @else
+                <div style="background:#f8fafc;border-radius:8px;padding:16px;margin-bottom:16px">
+                    <p style="margin:0;font-size:13px;color:#64748b">
+                        <strong>Para:</strong> {{ $previewData['email_destino'] ?? '—' }}
+                    </p>
+                    <p style="margin:4px 0 0;font-size:13px;color:#64748b">
+                        <strong>Assunto:</strong> BCA - Você foi mencionado no Boletim {{ $previewData['bca_numero'] ?? '' }}
+                    </p>
+                </div>
+
+                <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:20px;margin-bottom:16px">
+                    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">
+                        {{ $previewData['nome_militar'] ?? '' }} — {{ $previewData['posto'] ?? '' }}
+                    </h4>
+                    <p style="margin:0 0 16px;font-size:13px;color:#64748b">
+                        Você foi mencionado no BCA nº {{ $previewData['bca_numero'] ?? '' }} de {{ $previewData['bca_data'] ?? '' }}.
+                    </p>
+                    <div style="background:#f1f5f9;border-left:3px solid #3b6aab;padding:14px 16px;font-family:monospace;font-size:12px;color:#334155;white-space:pre-wrap;line-height:1.7">
+                        {!! strip_tags($previewData['snippet'] ?? '') !!}
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:20px">
+                    <button wire:click="$set('showPreviewModal', false)"
+                            style="flex:1;padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:white;font-size:14px;cursor:pointer">
+                        Fechar
+                    </button>
+                    @if(!($previewData['foi_enviado'] ?? false))
+                    <button wire:click="enviarEmail({{ $previewData['id'] ?? 0 }})"
+                            style="flex:1;padding:12px;background:#059669;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer"
+                            @if($enviandoEmail) disabled @endif>
+                        @if($enviandoEmail)
+                            <span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Enviando...
+                        @else
+                            📤 Enviar Email
+                        @endif
+                    </button>
+                    @else
+                    <button disabled
+                            style="flex:1;padding:12px;background:#d1d5db;color:#6b7280;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:not-allowed">
+                        ✓ Já Enviado
+                    </button>
+                    @endif
+                </div>
+            @endif
+        </div>
+    </div>
     @endif
 
     {{-- Footer --}}

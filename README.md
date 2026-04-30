@@ -1,12 +1,12 @@
 # BCA Scrap v2 - Laravel 12 TALL Stack
 
-## 🚀 Sistema de Busca e Análise de Boletins de Comando da Aeronáutica
+## Sistema de Busca e Análise de Boletins de Comando da Aeronáutica
 
 > Migração completa do sistema PHP vanilla para Laravel 12 com TALL Stack (Tailwind, Alpine.js, Livewire 4, Laravel)
 
 ---
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
 O **BCA Scrap v2** é uma reescrita completa do sistema de busca automatizada de Boletins de Comando da Aeronáutica (BCA) para o GAC-PAC (Grupo de Acompanhamento e Controle do Programa Aeronave de Combate).
 
@@ -14,30 +14,30 @@ O **BCA Scrap v2** é uma reescrita completa do sistema de busca automatizada de
 
 | Aspecto | Sistema Antigo | Sistema Novo | Ganho |
 |---------|---------------|--------------|-------|
-| **Matching** | Busca frouxa (FTS) | **Estrita (SARAM/Nome)** | 🎯 Alta Precisão |
-| **Performance** | 5-15s | 1-3s | ⚡ **80% mais rápido** |
-| **UX** | PDF Externo | **Visualização In-app** | 🎨 Fluxo Contínuo |
-| **E-mails** | Manual/CRON | **Automático Real-time** | 📧 Notificação Instantânea |
-| **Cache** | Arquivos .txt | Redis multi-layer | 💾 Alta Performance |
-| **Processamento** | Síncrono (Trava UI) | **Assíncrono (Filas)** | 🔄 Interface Fluida |
-| **Testes** | 0% | 80%+ | ✅ Qualidade garantida |
+| **Matching** | Busca frouxa (FTS) | **Estrita (SARAM/Nome)** | Alta Precisão |
+| **Performance** | 5-15s | 1-3s | **80% mais rápido** |
+| **UX** | PDF Externo | **Visualização In-app** | Fluxo Contínuo |
+| **E-mails** | Manual/CRON | **Automático Real-time** | Notificação Instantânea |
+| **Cache** | Arquivos .txt | Redis multi-layer | Alta Performance |
+| **Processamento** | Síncrono (Trava UI) | **Assíncrono (Filas)** | Interface Fluida |
+| **Testes** | 0% | 80%+ | Qualidade garantida |
 
 ---
 
-## 🏗️ Arquitetura TALL Stack
+## Arquitetura TALL Stack
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  T - Tailwind CSS 4.x (JIT mode)                       │
 │  A - Alpine.js 3.x (integrado via Livewire)            │
 │  L - Laravel 12 (PHP 8.3+)                             │
-│  L - Livewire 3 (componentes reativos full-page)       │
+│  L - Livewire 4 (componentes reativos full-page)       │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Versão**: 2.1.1
-**Última atualização**: 14/03/2026
-**Status**: ✅ Funcional & Homologado
+**Versão**: 2.2.0
+**Última atualização**: 30/04/2026
+**Status**: Funcional & Homologado
 
 ### Stack Completo
 
@@ -45,19 +45,19 @@ O **BCA Scrap v2** é uma reescrita completa do sistema de busca automatizada de
 - **Frontend**: Livewire 4 + Tailwind CSS 4 + Alpine.js 3
 - **Database**: PostgreSQL 16 + pgAdmin 4
 - **Cache**: Redis 7
-- **Queue**: Laravel Horizon
-- **Email**: Laravel Mail + Queue
+- **Queue**: Laravel Queue (`queue:work`) via Docker
+- **Email**: Laravel Mail + SMTP FAB
 - **PDF**: pdftotext (Poppler Utils)
 - **Tests**: Pest PHP
 - **Deploy**: Docker + Docker Compose
 
 ---
 
-## 📚 Documentação
+## Documentação
 
 A documentação completa está organizada em módulos:
 
-### 📖 Documentos Principais
+### Documentos Principais
 
 1. **[00 - Índice Completo](docs/00_INDICE.md)** - Navegação rápida
 2. **[01 - Visão Geral](docs/01_VISAO_GERAL.md)** - Introdução e justificativa
@@ -65,19 +65,24 @@ A documentação completa está organizada em módulos:
 4. **[03 - Banco de Dados](docs/03_BANCO_DE_DADOS.md)** - PostgreSQL, migrations e migração
 5. **[04 - Otimização de Performance](docs/04_OTIMIZACAO_PERFORMANCE.md)** - Cache, paralelo, FTS
 6. **[05 - Componentes Livewire](docs/05_COMPONENTES_LIVEWIRE.md)** - Todos os componentes
-7. **[06 - Sistema de Filas](docs/06_SISTEMA_FILAS_JOBS.md)** - Jobs, Horizon, schedulers
+7. **[06 - Sistema de Filas](docs/06_SISTEMA_FILAS_JOBS.md)** - Jobs, queue worker, schedulers
 8. **[07 - Docker e Infraestrutura](docs/07_DOCKER_INFRAESTRUTURA.md)** - Containers e deploy
 9. **[08 - Testes](docs/08_TESTES.md)** - Estratégia com Pest
 10. **[09 - Migração Passo a Passo](docs/09_MIGRACAO_PASSO_A_PASSO.md)** - Guia completo 7 semanas
 11. **[10 - Guia de Comandos](docs/10_GUIA_COMANDOS.md)** - Referência rápida
 
-### 📎 Anexos
+### Aprendizados Operacionais
+
+- **[Lições Aprendidas](docs/LICOES_APRENDIDAS.md)** - Bugs e incidentes documentados
+- **[AGENTS.md](AGENTS.md)** - Regras críticas para agentes de IA e operadores
+
+### Anexos
 
 - **[Comparação de Performance](docs/anexos/comparacao_performance.md)**
 - **[Checklist de Migração](docs/anexos/checklist_migracao.md)**
 - **[Scripts de Migração](docs/anexos/scripts/)**
 
-### 💾 Exemplos
+### Exemplos
 
 - **[.env.example](docs/exemplos/.env.example)** - Variáveis de ambiente
 - **[docker-compose.yml](docs/exemplos/docker-compose.yml.example)** - Configuração Docker
@@ -86,69 +91,65 @@ A documentação completa está organizada em módulos:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Pré-requisitos
 
-- Docker & Docker Compose
+- Docker & Docker Compose (v2+)
 - Git
-- Node.js 20+ (para build assets)
 
 ### Instalação
 
 ```bash
-# 1. Clone o repositório (quando estiver pronto)
+# 1. Clone o repositório
 git clone https://github.com/gacpac/bca-scrap-v2.git
 cd bca-scrap-v2
 
 # 2. Configure ambiente
 cp .env.example .env
-# Edite .env com suas credenciais
+# Edite .env com suas credenciais (MAIL_*, DB_*, APP_KEY)
 
-# 3. Suba containers
-docker-compose up -d
+# 3. Suba os containers
+docker compose up -d
 
-# 4. Instale dependências
-docker exec bca-php composer install
-docker exec bca-php npm install
+# 4. Instale dependências PHP
+docker compose exec php composer install
 
 # 5. Gere chave da aplicação
-docker exec bca-php php artisan key:generate
+docker compose exec php php artisan key:generate
 
-# 6. Rode migrations
-docker exec bca-php php artisan migrate --seed
+# 6. Rode as migrations
+docker compose exec php php artisan migrate --seed
 
-# 7. Build assets
-docker exec bca-php npm run build
-
-# 8. Inicie Horizon (filas)
-docker exec bca-php php artisan horizon
+# 7. Build dos assets (opcional em desenvolvimento)
+docker compose exec php npm install && npm run build
 ```
 
 ### Acessar Sistema
 
-- **Aplicação**: http://localhost:8080
-- **Horizon (Queue Dashboard)**: http://localhost:8080/horizon
-- **pgAdmin**: http://localhost:5050
+- **Aplicação**: http://localhost:18080
+- **pgAdmin**: http://localhost:15050
+
+> **Nota sobre a fila (queue):** O container `queue` sobe automaticamente com `docker compose up -d`. Após editar qualquer classe em `app/Jobs/`, execute `docker compose restart queue` para recarregar o código. Veja [AGENTS.md](AGENTS.md) para detalhes.
 
 ---
 
-## 📊 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
-bca-scrap-laravel/
+bca_scrap_v2/
 ├── app/
 │   ├── Console/Commands/       # Comandos Artisan (busca automática, etc)
 │   ├── Events/                 # Eventos do sistema
 │   ├── Http/
-│   │   ├── Controllers/Api/    # APIs REST
-│   │   └── Livewire/          # Componentes Livewire
-│   ├── Jobs/                   # Jobs assíncronos (download, email, etc)
-│   ├── Mail/                   # Templates de email
+│   │   ├── Controllers/        # Controllers web e auth
+│   │   └── Middleware/         # Middleware personalizado (EnsureRole, etc)
+│   ├── Jobs/                   # Jobs assíncronos (download, email, análise)
+│   ├── Livewire/               # Componentes Livewire reativos
+│   ├── Mail/                   # Mailables (notificação BCA, compilado SAD)
 │   ├── Models/                 # Eloquent Models
-│   ├── Notifications/          # Notificações
-│   ├── Repositories/           # Repositories pattern
-│   └── Services/               # Business logic
+│   ├── Repositories/           # Repository pattern (contratos + implementações)
+│   └── Services/               # Business logic (Download, Analysis, etc)
 ├── database/
 │   ├── migrations/             # Migrations PostgreSQL
 │   ├── seeders/                # Seeders de dados
@@ -161,103 +162,107 @@ bca-scrap-laravel/
 │       ├── livewire/           # Views Livewire
 │       └── mail/               # Templates email
 ├── routes/
-│   ├── web.php                # Rotas web
-│   ├── api.php                # Rotas API
+│   ├── web.php                # Rotas web (dashboard, efetivo, palavras-chave)
 │   └── console.php            # Comandos console
 ├── tests/
 │   ├── Feature/               # Testes de integração
 │   └── Unit/                  # Testes unitários
-├── docker/                    # Configuração Docker
-└── docs/                      # Esta documentação
+├── docker/                    # Configuração Docker (php, nginx, postgres)
+├── docs/                      # Documentação completa
+├── AGENTS.md                  # Regras operacionais para agentes de IA
+└── docker-compose.yml         # Orquestração dos 6 containers
 ```
 
 ---
 
-## 🔧 Comandos Principais
+## Comandos Principais
 
 ### Desenvolvimento
 
 ```bash
 # Rodar testes
-php artisan test
-# ou
-./vendor/bin/pest
+docker compose exec php php artisan test
+
+# Com cobertura
+docker compose exec php php artisan test --coverage
 
 # Análise estática
-./vendor/bin/phpstan analyse
+docker compose exec php ./vendor/bin/phpstan analyse
 
 # Formatar código
-./vendor/bin/pint
+docker compose exec php ./vendor/bin/pint
 
 # Build assets (watch mode)
 npm run dev
 
-# Build production
+# Build produção
 npm run build
 ```
 
-### Manutenção
+### Manutenção do Sistema
 
 ```bash
 # Busca automática de BCA
-php artisan bca:buscar-automatica
+docker compose exec php php artisan bca:buscar-automatica
 
-# Limpar BCAs antigos
-php artisan bca:limpar-antigos
+# Ver jobs na fila
+docker compose exec php php artisan queue:failed
 
-# Reenviar emails com falha
-php artisan bca:reenviar-emails-falhos
+# Reprocessar job com falha
+docker compose exec php php artisan queue:retry all
 
-# Backup do banco
-php artisan backup:run --only-db
+# Limpar cache
+docker compose exec php php artisan cache:clear
 ```
 
-### Queue/Horizon
+### Queue (Fila de Jobs)
+
+> **IMPORTANTE:** Após modificar qualquer `app/Jobs/*.php`, reinicie o container `queue`.
 
 ```bash
-# Iniciar Horizon
-php artisan horizon
+# Reiniciar queue worker (obrigatório após editar Jobs)
+docker compose restart queue
 
-# Pausar queue
-php artisan horizon:pause
+# Verificar logs da fila
+docker compose logs queue -f
 
-# Continuar queue
-php artisan horizon:continue
+# Status de todos os containers
+docker compose ps
 
-# Ver estatísticas
-php artisan horizon:list
+# Ver jobs pendentes no banco
+docker compose exec php php artisan tinker --execute="echo DB::table('jobs')->count();"
 ```
 
 ---
 
-## 🧪 Testes
+## Testes
 
 O projeto utiliza **Pest PHP** para testes modernos e legíveis.
 
 ```bash
 # Rodar todos os testes
-php artisan test
+docker compose exec php php artisan test
 
 # Testes com cobertura
-php artisan test --coverage
+docker compose exec php php artisan test --coverage --min=80
 
 # Testes específicos
-php artisan test --filter BuscaBcaTest
+docker compose exec php php artisan test --filter BuscaBcaTest
 
 # Testes em paralelo
-php artisan test --parallel
+docker compose exec php php artisan test --parallel
 ```
 
 ### Cobertura Esperada
 
-- ✅ **Services**: 90%+
-- ✅ **Jobs**: 85%+
-- ✅ **Commands**: 80%+
-- ✅ **Livewire Components**: 75%+
+- **Services**: 90%+
+- **Jobs**: 85%+
+- **Commands**: 80%+
+- **Livewire Components**: 75%+
 
 ---
 
-## 📈 Performance
+## Performance
 
 ### Benchmarks (47 militares, 1 BCA)
 
@@ -266,7 +271,7 @@ php artisan test --parallel
 | Busca BCA | 5-15s | 1-3s | **80%** |
 | Extração PDF | 2s | 0.5s | **75%** |
 | Análise Efetivo | 3-5s | <1s | **70%** |
-| Envio Email | Bloqueia | Assíncrono | **∞** |
+| Envio Email | Bloqueia | Assíncrono | não bloqueia |
 
 ### Otimizações Implementadas
 
@@ -274,33 +279,31 @@ php artisan test --parallel
 2. **Cache Redis**: 3 camadas (query, texto PDF, resultados)
 3. **PostgreSQL FTS**: Full-text search nativo com índices GIN
 4. **Queue System**: Processamento assíncrono não bloqueia UI
-5. **Lazy Loading**: Componentes Livewire carregam sob demanda
+5. **Chunking no Analysis**: Processamento em batches para grandes efetivos
 
 ---
 
-## 🔐 Segurança
+## Segurança
 
-- ✅ **Eloquent ORM**: Previne SQL injection por padrão
-- ✅ **CSRF Protection**: Tokens em todos os forms
-- ✅ **XSS Prevention**: Blade escaping automático
-- ✅ **Rate Limiting**: APIs protegidas contra abuse
-- ✅ **Sanctum**: Autenticação API segura
-- ✅ **Encrypted Secrets**: Credenciais em Docker secrets
+- **Eloquent ORM**: Previne SQL injection por padrão
+- **CSRF Protection**: Tokens em todos os forms
+- **XSS Prevention**: Blade escaping automático
+- **Rate Limiting**: APIs protegidas contra abuse
+- **Role Middleware**: Acesso admin separado de usuário comum
+- **Credenciais**: Gerenciadas via `.env` (nunca no repositório)
 
 ---
 
-## 🤝 Contribuindo
+## Contribuindo
 
 ### Workflow de Desenvolvimento
 
-1. Fork o repositório
-2. Crie branch para feature (`git checkout -b feature/nova-funcionalidade`)
-3. Escreva testes primeiro (TDD)
-4. Implemente a funcionalidade
-5. Rode testes e análise estática
-6. Commit (`git commit -m 'feat: adiciona nova funcionalidade'`)
-7. Push (`git push origin feature/nova-funcionalidade`)
-8. Abra Pull Request
+1. Crie branch para feature (`git checkout -b feature/nova-funcionalidade`)
+2. Escreva testes primeiro (TDD)
+3. Implemente a funcionalidade
+4. Rode testes e análise estática
+5. Commit (`git commit -m 'feat: adiciona nova funcionalidade'`)
+6. Push e abra Pull Request
 
 ### Padrões de Commit
 
@@ -316,50 +319,47 @@ Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
 
 ---
 
-## 📝 Roadmap
+## Roadmap
 
-### Semana 0 - Pré-Projeto ⚠️ (Antes de Começar)
-- [ ] Validações de infraestrutura com TI (Docker, PostgreSQL, Redis aprovados)
-- [ ] Teste de migração MySQL→PostgreSQL em ambiente isolado
-- [ ] Backup completo do sistema atual com baseline de registros documentado
-- [ ] Ambiente de staging configurado e acessível
-- [ ] Acesso às APIs externas (CENDOC/ICEA) validado a partir do servidor de produção
+### Semana 0 - Pré-Projeto (Concluído)
+- [x] Validações de infraestrutura com TI (Docker, PostgreSQL, Redis aprovados)
+- [x] Backup completo do sistema atual com baseline de registros documentado
+- [x] Ambiente de staging configurado e acessível
 
-### Fase 1 - MVP (Semanas 1-5)
-- [ ] Setup inicial Laravel 12 + Docker
-- [ ] Migrations PostgreSQL com índices FTS
-- [ ] Models e Repositories
-- [ ] Services (Download com busca paralela limitada a 10 req/chunk, Processing)
-- [ ] Componentes Livewire básicos
-- [ ] Teste de migração de dados em ambiente de dev (Semana 5.5)
+### Fase 1 - MVP (Concluído)
+- [x] Setup inicial Laravel 12 + Docker
+- [x] Migrations PostgreSQL com índices FTS
+- [x] Models e Repositories
+- [x] Services (Download, Processing, Analysis)
+- [x] Componentes Livewire (busca, efetivo, palavras-chave, usuários)
 
-### Fase 2 - Otimização e Qualidade (Semanas 6-7)
-- [ ] Sistema de Queue completo com Horizon
-- [ ] Otimizações de performance (Cache Redis 3 camadas, FTS)
-- [ ] Testes automatizados (80%+ Services/Jobs, 60%+ Livewire)
-- [ ] Testes de integração e UAT com usuários reais
+### Fase 2 - Otimização e Qualidade (Concluído)
+- [x] Sistema de Queue com `queue:work` containerizado
+- [x] Otimizações de performance (Cache Redis 3 camadas, FTS, chunking)
+- [x] Testes automatizados (80%+ Services/Jobs)
+- [x] Sistema de email (notificação individual + compilado SAD)
+- [x] Health check e métricas de execução
 
-### Fase 3 - Deploy (Semana 8)
-- [ ] Migração de dados produção (com rollback testado e baseline validado)
-- [ ] Deploy produção
-- [ ] Monitoramento e alertas configurados
-- [ ] Treinamento da equipe
+### Fase 3 - Deploy (Concluído)
+- [x] Deploy em produção via Docker Compose
+- [x] Monitoramento via `/health` e `/metrics`
+- [x] Documentação operacional (AGENTS.md, lições aprendidas)
 
-### Fase 4 - Melhorias Futuras 📅 (Pós-lançamento)
+### Fase 4 - Melhorias Futuras (Pós-lançamento)
 - [ ] Notificações Telegram
 - [ ] Relatórios em PDF
 - [ ] Dashboard de estatísticas
 - [ ] API pública documentada
-- [ ] PWA (Progressive Web App)
 
 ---
 
-## 📞 Suporte
+## Suporte
 
 ### Documentação
 - **Docs completas**: [/docs](/docs)
+- **Regras operacionais**: [AGENTS.md](AGENTS.md)
 - **Laravel Docs**: https://laravel.com/docs/12.x
-- **Livewire Docs**: https://livewire.laravel.com/docs/4.x
+- **Livewire Docs**: https://livewire.laravel.com/docs
 
 ### Contato
 - **Email**: gacpac@fab.mil.br
@@ -368,20 +368,12 @@ Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
 
 ---
 
-## 📄 Licença
+## Licenca
 
-Uso interno - Força Aérea Brasileira © 2026
-
----
-
-## 🙏 Agradecimentos
-
-- Equipe GAC-PAC
-- Comunidade Laravel Brasil
-- CENDOC/ICEA (fontes de dados)
+Uso interno — Força Aérea Brasileira © 2026
 
 ---
 
-**Versão**: 2.0.0
-**Última atualização**: 13/03/2026
-**Status**: 📝 Em Documentação
+**Versão**: 2.2.0
+**Última atualização**: 30/04/2026
+**Status**: Funcional & Homologado

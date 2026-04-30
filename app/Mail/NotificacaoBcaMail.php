@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 
 class NotificacaoBcaMail extends Mailable
 {
@@ -26,8 +27,13 @@ class NotificacaoBcaMail extends Mailable
 
     public function content(): Content
     {
+        $bcaUrl = $this->ocorrencia->bca->url
+            ? Storage::disk('public')->url($this->ocorrencia->bca->url)
+            : null;
+
         return new Content(
             view: 'mail.notificacao-bca',
+            with: ['bcaDownloadUrl' => $bcaUrl],
         );
     }
 }

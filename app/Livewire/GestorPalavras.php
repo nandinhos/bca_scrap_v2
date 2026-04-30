@@ -38,6 +38,13 @@ class GestorPalavras extends Component
         $this->reload();
     }
 
+    public function toggleAll(bool $ativa): void
+    {
+        $this->ensureAdmin();
+        PalavraChave::query()->update(['ativa' => $ativa]);
+        $this->reload();
+    }
+
     public function openCreate(): void
     {
         $this->ensureAdmin();

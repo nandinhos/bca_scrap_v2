@@ -4,9 +4,13 @@
             <h2 style="font-size:15px;font-weight:600;color:#1e293b;margin:0">Palavras-chave</h2>
             <p style="font-size:13px;color:#94a3b8;margin:2px 0 0">Ative as palavras que devem ser buscadas no BCA</p>
         </div>
-        @if(auth()->user()->isAdmin())
-        <button wire:click="openCreate" style="background:#1e3a5f;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">+ Nova</button>
-        @endif
+        <div style="display:flex;gap:8px">
+            @if(auth()->user()->isAdmin())
+            <button wire:click="toggleAll(true)" style="background:#16a34a;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Ativar todos</button>
+            <button wire:click="toggleAll(false)" style="background:#64748b;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Desativar todos</button>
+            <button wire:click="openCreate" style="background:#1e3a5f;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">+ Nova</button>
+            @endif
+        </div>
     </div>
 
     <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden">

@@ -74,11 +74,11 @@ class BcaAnalysisService
                             ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
                         );
 
-                        if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
-                            if ($ocorrencia->wasRecentlyCreated) {
-                                $count++;
+                        if ($ocorrencia->wasRecentlyCreated) {
+                            $count++;
+                            if (! config('bca.suppress_emails', false)) {
+                                event(new MilitarEncontradoEvent($ocorrencia));
                             }
-                            event(new MilitarEncontradoEvent($ocorrencia));
                         }
                     }
                 }
@@ -92,7 +92,10 @@ class BcaAnalysisService
         foreach ($keywords as $kw) {
             $kwCount = mb_substr_count(strtoupper($textoBca), strtoupper($kw->palavra));
             if ($kwCount > 0) {
-                $keywordsEncontradas[$kw->palavra] = $kwCount;
+                $keywordsEncontradas[$kw->palavra] = [
+                    'count'   => $kwCount,
+                    'snippet' => $this->gerarSnippetKeyword($kw->palavra, $textoBca),
+                ];
             }
         }
 
@@ -114,10 +117,10 @@ class BcaAnalysisService
 
         Log::info("BCA [{$data}]: analysis done — {$count} new occurrences, ".count($keywordsEncontradas).' keywords');
 
-        $bca->update(['analisado_em' => now()]);
+        $bca->update(['analisado_em' => now(), 'keywords_encontradas' => $keywordsEncontradas]);
 
         // 4. Dispatch compiled report to SAD (after all individual emails are dispatched)
-        if ($count > 0) {
+        if ($count > 0 && ! config('bca.suppress_emails', false)) {
             EnviarCompiladoSADJob::dispatch($bca->id)->afterCommit();
         }
 
@@ -180,6 +183,34 @@ class BcaAnalysisService
         $snippet = preg_replace(
             '/'.preg_quote($highlightBase, '/').'/i',
             '<mark style="background:#00ff00;color:#000;font-weight:bold;padding:0 2px;border-radius:2px">$0</mark>',
+            $snippet
+        );
+
+        return mb_substr($snippet, 0, 1000);
+    }
+
+    private function gerarSnippetKeyword(string $keyword, string $textoBca): string
+    {
+        $lines = explode("\n", $textoBca);
+        $matchedLines = [];
+
+        foreach ($lines as $i => $line) {
+            if (mb_stripos($line, $keyword) !== false) {
+                $start = max(0, $i - 1);
+                $end = min(count($lines) - 1, $i + 1);
+                for ($j = $start; $j <= $end; $j++) {
+                    $matchedLines[$j] = trim($lines[$j]);
+                }
+            }
+        }
+
+        $snippet = implode("\n", array_filter(array_values($matchedLines)));
+
+        $snippet = e($snippet);
+
+        $snippet = preg_replace(
+            '/'.preg_quote($keyword, '/').'/i',
+            '<mark style="background:#fbbf24;color:#000;font-weight:bold;padding:0 2px;border-radius:2px">$0</mark>',
             $snippet
         );
 

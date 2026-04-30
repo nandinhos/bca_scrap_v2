@@ -26,7 +26,8 @@ class BaixarBcaJob implements ShouldQueue
 
     public function __construct(
         public readonly string $data,
-        public readonly array $keywords = []
+        public readonly array $keywords = [],
+        public readonly bool $suppressEmails = false
     ) {}
 
     public function handle(BcaDownloadService $service): void
@@ -60,7 +61,13 @@ class BaixarBcaJob implements ShouldQueue
                     ['numero' => $numero, 'url' => $path]
                 );
 
-                ProcessarBcaJob::dispatch($bca->id, $this->keywords);
+                if ($bca->analisado_em !== null) {
+                    Log::info("BaixarBcaJob: BCA {$this->data} já foi analisado em {$bca->analisado_em}, pulando processamento");
+
+                    return;
+                }
+
+                ProcessarBcaJob::dispatch($bca->id, $this->keywords, $this->suppressEmails);
             });
         } catch (\Throwable $e) {
             Log::error("BaixarBcaJob: transaction failed for {$this->data}: ".$e->getMessage());

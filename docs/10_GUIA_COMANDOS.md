@@ -1,79 +1,87 @@
 # 10 - Guia de Comandos (Referência Rápida)
 
-## 🚀 Setup Inicial
+## Setup Inicial
 
 ```bash
-# Clonar e instalar
+# Clonar e configurar
 git clone https://github.com/gacpac/bca-scrap-v2
-cd bca-scrap-v2
+cd bca_scrap_v2
 cp .env.example .env
-composer install
-npm install
+# Edite .env com credenciais reais (MAIL_*, DB_*, APP_KEY)
 
-# Docker
-docker-compose up -d
-docker exec bca-php php artisan key:generate
-docker exec bca-php php artisan migrate --seed
+# Subir containers
+docker compose up -d
+
+# Instalar dependências e configurar
+docker compose exec php composer install
+docker compose exec php php artisan key:generate
+docker compose exec php php artisan migrate --seed
 
 # Build assets
-npm run build
+npm install && npm run build
 ```
 
 ---
 
-## 🐳 Docker
+## Docker
 
 ```bash
 # Subir todos containers
-docker-compose up -d
+docker compose up -d
+
+# Ver status dos containers
+docker compose ps
 
 # Ver logs
-docker-compose logs -f
-docker-compose logs -f php    # apenas PHP
-docker-compose logs -f nginx  # apenas Nginx
+docker compose logs -f
+docker compose logs -f php       # apenas PHP
+docker compose logs -f nginx     # apenas Nginx
+docker compose logs -f queue     # apenas Queue worker
 
 # Parar
-docker-compose stop
+docker compose stop
 
 # Parar e remover
-docker-compose down
+docker compose down
 
-# Rebuild
-docker-compose up -d --build
+# Rebuild (após mudanças no Dockerfile)
+docker compose up -d --build
 
-# Acessar container
-docker exec -it bca-php bash
-docker exec -it bca-postgres psql -U bca_user bca_db
+# Acessar container PHP
+docker compose exec php bash
+
+# Acessar PostgreSQL
+docker compose exec postgres psql -U bca_user bca_db
 ```
 
 ---
 
-## 🗄️ Banco de Dados
+## Banco de Dados
 
 ```bash
 # Migrations
-php artisan migrate                    # rodar migrations
-php artisan migrate:fresh --seed       # limpar e recriar
-php artisan migrate:rollback           # desfazer última
-php artisan migrate:status             # ver status
+docker compose exec php php artisan migrate                    # rodar migrations
+docker compose exec php php artisan migrate:fresh --seed       # limpar e recriar
+docker compose exec php php artisan migrate:rollback           # desfazer última
+docker compose exec php php artisan migrate:status             # ver status
 
 # Seeders
-php artisan db:seed                    # todos seeders
-php artisan db:seed --class=EfetivoSeeder  # específico
+docker compose exec php php artisan db:seed                    # todos seeders
+docker compose exec php php artisan db:seed --class=EfetivoSeeder  # específico
 
 # PostgreSQL CLI
-docker exec -it bca-postgres psql -U bca_user -d bca_db
+docker compose exec postgres psql -U bca_user -d bca_db
 
 # Backup
-docker exec bca-postgres pg_dump -U bca_user bca_db > backup_$(date +%Y%m%d).sql
+docker compose exec postgres pg_dump -U bca_user bca_db > backup_$(date +%Y%m%d).sql
 
 # Restore
-docker exec -i bca-postgres psql -U bca_user bca_db < backup.sql
+docker compose exec -T postgres psql -U bca_user bca_db < backup.sql
 ```
 
 ---
 
-## 🎨 Frontend
+## Frontend
 
 ```bash
 # Desenvolvimento (watch mode)
@@ -87,327 +95,269 @@ rm -rf node_modules/.cache
 npm run build
 
 # Publish Livewire assets
-php artisan livewire:publish --assets
+docker compose exec php php artisan livewire:publish --assets
 ```
 
 ---
 
-## ⚙️ Laravel Artisan
+## Laravel Artisan
 
 ### Manutenção do Sistema
 
 ```bash
 # Busca automática de BCA
-php artisan bca:buscar-automatica
+docker compose exec php php artisan bca:buscar-automatica
 
 # Limpar BCAs antigos (manter últimos 30)
-php artisan bca:limpar-antigos
-
-# Reenviar emails com falha
-php artisan bca:reenviar-emails-falhos
-
-# Limpar logs antigos
-php artisan bca:limpar-logs --days=30
+docker compose exec php php artisan bca:limpar-antigos
 ```
 
 ### Cache
 
 ```bash
 # Limpar todos caches
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+docker compose exec php php artisan cache:clear
+docker compose exec php php artisan config:clear
+docker compose exec php php artisan route:clear
+docker compose exec php php artisan view:clear
 
 # Criar caches (produção)
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Cache Redis específico
-php artisan cache:clear --store=redis
+docker compose exec php php artisan config:cache
+docker compose exec php php artisan route:cache
+docker compose exec php php artisan view:cache
 ```
 
-### Queue e Horizon
+### Queue (Fila de Jobs)
+
+> **REGRA CRÍTICA:** Após modificar qualquer `app/Jobs/*.php`, reinicie o container `queue`. O OPcache do PHP mantém o código antigo em memória até o processo ser reiniciado. Ver [AGENTS.md](../AGENTS.md) e [Lições Aprendidas](LICOES_APRENDIDAS.md) para detalhes.
 
 ```bash
-# Iniciar Horizon
-php artisan horizon
+# Reiniciar queue worker (OBRIGATÓRIO após editar Jobs)
+docker compose restart queue
 
-# Status
-php artisan horizon:status
+# Verificar logs do queue
+docker compose logs queue -f
+docker compose logs queue --tail=20
 
-# Pausar
-php artisan horizon:pause
+# Ver jobs pendentes
+docker compose exec php php artisan queue:failed
 
-# Continuar
-php artisan horizon:continue
+# Reprocessar job específico (por ID)
+docker compose exec php php artisan queue:retry 5
 
-# Terminar (gracefully)
-php artisan horizon:terminate
+# Reprocessar todos os jobs falhos
+docker compose exec php php artisan queue:retry all
 
-# Listar workers
-php artisan horizon:list
+# Limpar failed jobs
+docker compose exec php php artisan queue:flush
 
-# Processar queue manualmente (dev)
-php artisan queue:work
-
-# Ver jobs falhados
-php artisan queue:failed
-
-# Reprocessar job específico
-php artisan queue:retry 5  # ID do job
-
-# Reprocessar todos
-php artisan queue:retry all
+# Processar queue manualmente (1 job, para debug)
+docker compose exec php php artisan queue:work --once
 ```
 
 ### Scheduler
 
 ```bash
 # Rodar scheduler manualmente (dev)
-php artisan schedule:run
+docker compose exec php php artisan schedule:run
 
 # Ver comandos agendados
-php artisan schedule:list
-
-# Testar comando específico
-php artisan schedule:test
+docker compose exec php php artisan schedule:list
 ```
 
 ---
 
-## 🧪 Testes
+## Testes
 
 ```bash
 # Rodar todos testes
-php artisan test
+docker compose exec php php artisan test
 
 # ou com Pest
-./vendor/bin/pest
+docker compose exec php ./vendor/bin/pest
 
 # Com cobertura
-php artisan test --coverage
-php artisan test --coverage --min=80
+docker compose exec php php artisan test --coverage
+docker compose exec php php artisan test --coverage --min=80
 
 # Testes específicos
-php artisan test --filter BuscaBcaTest
-php artisan test tests/Feature/BuscaBcaTest.php
+docker compose exec php php artisan test --filter BuscaBcaTest
+docker compose exec php php artisan test tests/Feature/BuscaBcaTest.php
 
 # Parallel
-php artisan test --parallel
+docker compose exec php php artisan test --parallel
 
 # Stop on failure
-php artisan test --stop-on-failure
+docker compose exec php php artisan test --stop-on-failure
 
 # Ver detalhes
-php artisan test --verbose
+docker compose exec php php artisan test --verbose
 ```
 
 ---
 
-## 📊 Análise de Código
+## Análise de Código
 
 ```bash
 # Laravel Pint (formatar)
-./vendor/bin/pint
-./vendor/bin/pint --test  # apenas verificar
+docker compose exec php ./vendor/bin/pint
+docker compose exec php ./vendor/bin/pint --test  # apenas verificar
 
-# PHPStan (análise estática)
-./vendor/bin/phpstan analyse
-
-# Larastan (Laravel-specific)
-./vendor/bin/phpstan analyse --memory-limit=2G
+# PHPStan / Larastan (análise estática)
+docker compose exec php ./vendor/bin/phpstan analyse --memory-limit=2G
 ```
 
 ---
 
-## 🔍 Debug
+## Debug / Tinker
 
 ```bash
-# Telescope (Laravel Debug)
-php artisan telescope:install
-php artisan migrate
+# Abrir REPL interativo
+docker compose exec php php artisan tinker
 
-# Laravel Debugbar
-composer require barryvdh/laravel-debugbar --dev
+# Executar comando rápido
+docker compose exec php php artisan tinker --execute="echo App\Models\Bca::count();"
 
-# Logs
-tail -f storage/logs/laravel.log
-tail -f storage/logs/horizon.log
+# Verificar ocorrências de um BCA
+docker compose exec php php artisan tinker --execute="
+\$bca = App\Models\Bca::where('data', '2026-04-10')->first();
+echo 'Ocorrencias: ' . \$bca->ocorrencias()->count();
+"
 
-# Dump server (para dd())
-php artisan dump-server
+# Ver jobs na fila
+docker compose exec php php artisan tinker --execute="echo DB::table('jobs')->count();"
+
+# Logs da aplicação
+docker compose exec php tail -f storage/logs/laravel.log
 ```
 
 ---
 
-## 📦 Deploy
+## Deploy / Atualização
 
 ```bash
-# Produção
+# Atualizar sistema em produção
 git pull origin main
-composer install --no-dev --optimize-autoloader
+docker compose exec php composer install --no-dev --optimize-autoloader
 npm run build
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan horizon:terminate
-php artisan queue:restart
-docker-compose restart
+docker compose exec php php artisan migrate --force
+docker compose exec php php artisan config:cache
+docker compose exec php php artisan route:cache
+docker compose exec php php artisan view:cache
+docker compose restart queue   # SEMPRE reiniciar queue após deploy
+docker compose restart php
 
-# Rollback
-git checkout previous-version
-composer install --no-dev
-php artisan migrate:rollback
-docker-compose restart
+# Rollback de migration
+docker compose exec php php artisan migrate:rollback
+docker compose restart queue
 ```
 
 ---
 
-## 🔐 Segurança
-
-```bash
-# Gerar nova App Key
-php artisan key:generate
-
-# Limpar sessions
-php artisan session:clear
-
-# Verificar permissões
-docker exec bca-php find storage bootstrap/cache -type d -exec chmod 775 {} \;
-docker exec bca-php find storage bootstrap/cache -type f -exec chmod 664 {} \;
-```
-
----
-
-## 📈 Performance
-
-```bash
-# Opcache reset
-php artisan opcache:clear
-
-# Queue optimization
-php artisan queue:prune-batches  # limpar batches antigos
-php artisan queue:prune-failed   # limpar failed jobs
-
-# Database optimization
-php artisan db:monitor           # monitorar conexões
-```
-
----
-
-## 🛠️ Utilitários
+## Utilitários
 
 ```bash
 # Gerar Models
-php artisan make:model Bca -mfs
+docker compose exec php php artisan make:model Bca -mfs
 # -m = migration, -f = factory, -s = seeder
 
 # Gerar Livewire
-php artisan make:livewire Busca/BuscaBca
+docker compose exec php php artisan make:livewire Busca/BuscaBca
 
 # Gerar Job
-php artisan make:job ProcessarBcaJob
-
-# Gerar Command
-php artisan make:command BuscaAutomaticaCommand
-
-# Gerar Test
-php artisan make:test BuscaBcaTest
-php artisan make:test BuscaBcaTest --unit
+docker compose exec php php artisan make:job ProcessarBcaJob
 
 # Gerar Mail
-php artisan make:mail MencaoBcaMail --markdown=mail.mencao-bca
+docker compose exec php php artisan make:mail NotificacaoBcaMail
+
+# Gerar Test
+docker compose exec php php artisan make:test BuscaBcaTest
 
 # Listar rotas
-php artisan route:list
-php artisan route:list --name=bca  # filtrar
-
-# Ver configuração
-php artisan config:show database
-php artisan config:show cache
+docker compose exec php php artisan route:list
+docker compose exec php php artisan route:list --name=bca  # filtrar
 ```
 
 ---
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
-### Problema: "Class not found"
+### Problema: "Class not found" após editar arquivo
 ```bash
-composer dump-autoload
-php artisan clear-compiled
-php artisan optimize
+docker compose exec php composer dump-autoload
+docker compose exec php php artisan clear-compiled
 ```
 
-### Problema: Permissões
+### Problema: Jobs não usam o código atualizado
 ```bash
-docker exec bca-php chown -R www-data:www-data storage bootstrap/cache
-docker exec bca-php chmod -R 775 storage bootstrap/cache
+# OPcache mantém código antigo — reiniciar obrigatório
+docker compose restart queue
+docker compose logs queue --tail=5
 ```
 
-### Problema: Queue travada
+### Problema: Permissões em storage/
 ```bash
-php artisan horizon:terminate
-redis-cli FLUSHALL  # CUIDADO: apaga todo cache
-php artisan horizon
+docker compose exec php chown -R www-data:www-data storage bootstrap/cache
+docker compose exec php chmod -R 775 storage bootstrap/cache
+```
+
+### Problema: Queue travada / jobs presos
+```bash
+# Ver jobs falhados
+docker compose exec php php artisan queue:failed
+
+# Limpar todos os falhos e reiniciar
+docker compose exec php php artisan queue:flush
+docker compose restart queue
 ```
 
 ### Problema: Migrations falham
 ```bash
-# Ver último erro
-docker exec bca-postgres psql -U bca_user bca_db -c "SELECT * FROM pg_stat_activity;"
+# Ver status
+docker compose exec php php artisan migrate:status
 
-# Dropar tudo e recriar
-php artisan migrate:fresh --seed
+# Dropar tudo e recriar (desenvolvimento apenas)
+docker compose exec php php artisan migrate:fresh --seed
 ```
 
 ### Problema: Assets não atualizam
 ```bash
 rm -rf public/build
 npm run build
-php artisan view:clear
-Ctrl+Shift+R  # no navegador (hard reload)
+docker compose exec php php artisan view:clear
+# Hard reload no browser: Ctrl+Shift+R
 ```
 
----
-
-## 📞 Atalhos Úteis
-
+### Problema: Email não chega
 ```bash
-# Alias (adicionar no ~/.bashrc ou ~/.zshrc)
-alias art='php artisan'
-alias pest='./vendor/bin/pest'
-alias pint='./vendor/bin/pint'
-
-# Uso
-art migrate
-art test --filter=BuscaBca
-pest --coverage
+# Verificar configuração SMTP
+docker compose exec php php artisan tinker --execute="
+Illuminate\Support\Facades\Mail::raw('Teste', fn(\$m) => \$m->to('seu@email.com')->subject('Teste'));
+"
+# Verificar logs:
+docker compose exec php tail -f storage/logs/laravel.log
 ```
 
 ---
 
-## 🔗 URLs do Sistema
+## URLs do Sistema
 
-| Serviço | URL | Credenciais |
-|---------|-----|-------------|
-| Aplicação | http://localhost:8080 | - |
-| Horizon | http://localhost:8080/horizon | - |
-| pgAdmin | http://localhost:5050 | admin@gacpac.fab.mil.br / admin123 |
-| PostgreSQL | localhost:5432 | bca_user / bca_pass |
-| Redis | localhost:6379 | - |
+| Serviço | URL | Observação |
+|---------|-----|------------|
+| Aplicação | http://localhost:18080 | Login: usuário cadastrado no sistema |
+| pgAdmin | http://localhost:15050 | Gestão do banco PostgreSQL |
+| Health Check | http://localhost:18080/health | Status dos serviços |
+| Metrics | http://localhost:18080/metrics | Métricas de execução |
 
 ---
 
-## 📚 Referências Rápidas
+## Referências Rápidas
 
 - **Laravel Docs**: https://laravel.com/docs/12.x
-- **Livewire Docs**: https://livewire.laravel.com/docs/4.x
+- **Livewire Docs**: https://livewire.laravel.com/docs
 - **Pest Docs**: https://pestphp.com/docs
 - **Tailwind Docs**: https://tailwindcss.com/docs
 
 ---
 
-**Última atualização**: 13/03/2026
+**Última atualização**: 30/04/2026

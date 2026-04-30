@@ -33,12 +33,11 @@ class EnviarCompiladoSADJob implements ShouldQueue
         $bca = Bca::with('ocorrencias.efetivo.unidade')->findOrFail($this->bcaId);
 
         $ocorrencias = $bca->ocorrencias()
-            ->whereNotNull('enviado_em')
             ->with('efetivo.unidade')
             ->get();
 
         if ($ocorrencias->isEmpty()) {
-            Log::info("EnviarCompiladoSADJob: sem ocorrencias enviadas para BCA {$bca->data->format('Y-m-d')}, pulando");
+            Log::info("EnviarCompiladoSADJob: sem ocorrencias para BCA {$bca->data->format('Y-m-d')}, pulando");
 
             return;
         }

@@ -180,6 +180,35 @@
                 </div>
             </div>
             @endforeach
+
+            {{-- Palavras-chave encontradas --}}
+            @if(count($keywordsResultados) > 0)
+            <div style="margin-top:16px">
+                <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin:0 0 8px">
+                    Palavras-chave identificadas no boletim
+                </p>
+                @foreach($keywordsResultados as $palavra => $hit)
+                <div x-data="{ open: false }" style="background:white;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;overflow:hidden">
+                    <div style="padding:12px 16px;display:flex;align-items:center;gap:12px">
+                        <span style="font-size:13px;font-weight:700;color:#1e293b;flex:1">{{ $palavra }}</span>
+                        <span style="font-size:11px;font-weight:700;color:#b91c1c;background:#fef2f2;padding:3px 10px;border-radius:20px">
+                            {{ $hit['count'] }}×
+                        </span>
+                        <span style="font-size:11px;font-weight:600;color:#7c3aed;background:#f5f3ff;padding:3px 10px;border-radius:20px;border:1px solid #c4b5fd">
+                            PALAVRA-CHAVE
+                        </span>
+                        <button @click="open = !open" style="font-size:12px;font-weight:600;color:#64748b;background:white;border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 10px;cursor:pointer">
+                            <span x-show="!open">▾ Texto</span>
+                            <span x-show="open">▴ Fechar</span>
+                        </button>
+                    </div>
+                    <div x-show="open" x-collapse style="background:#f8fafc;border-top:1px dashed #e2e8f0;padding:16px 20px">
+                        <pre style="margin:0;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#334155;white-space:pre-wrap;border-left:3px solid #7c3aed;padding-left:14px">{!! strip_tags($hit['snippet'], '<mark>') !!}</pre>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
         </div>
     @endif
 

@@ -24,11 +24,16 @@ class AnalisarEfetivoJob implements ShouldQueue
     public function __construct(
         public readonly int $bcaId,
         public readonly string $tipo = 'automatica',
-        public readonly array $keywords = []
+        public readonly array $keywords = [],
+        public readonly bool $suppressEmails = false
     ) {}
 
     public function handle(BcaAnalysisService $service): void
     {
+        if ($this->suppressEmails) {
+            config(['bca.suppress_emails' => true]);
+        }
+
         $bca = Bca::findOrFail($this->bcaId);
         Log::info("AnalisarEfetivoJob: analyzing BCA {$bca->data}");
 

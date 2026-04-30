@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class CompiladoSadMail extends Mailable
 {
@@ -28,8 +29,13 @@ class CompiladoSadMail extends Mailable
 
     public function content(): Content
     {
+        $bcaUrl = $this->bca->url
+            ? Storage::disk('public')->url($this->bca->url)
+            : null;
+
         return new Content(
             view: 'mail.compilado-sad',
+            with: ['bcaDownloadUrl' => $bcaUrl],
         );
     }
 }

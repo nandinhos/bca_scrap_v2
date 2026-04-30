@@ -51,8 +51,8 @@ tr:last-child td{border-bottom:none}
                 </tbody>
             </table>
         </div>
-        @if($bca->url)
-        <a href="{{ $bca->url }}" class="btn">Ver BCA completo →</a>
+        @if($bcaDownloadUrl)
+        <a href="{{ $bcaDownloadUrl }}" class="btn">Baixar BCA completo →</a>
         @endif
     </div>
     <div class="ft">Email automático — BCA Scrap v2 · GAC-PAC · FAB</div>

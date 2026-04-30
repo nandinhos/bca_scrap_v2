@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/efetivo', ListagemEfetivo::class)->name('efetivo');
+        Route::get('/efetivo/export', [ListagemEfetivo::class, 'exportCsv'])->name('efetivo.export');
         Route::get('/usuarios', GestorUsuarios::class)->name('usuarios');
         Route::get('/execucoes', LogExecucoes::class)->name('execucoes');
     });

@@ -33,7 +33,7 @@ class BuscaBca extends Component
 
     public array $palavrasSelecionadas = [];
 
-    public array $keywordsEncontradas = [];
+    public array $keywordsResultados = [];
 
     public bool $buscando = false;
 
@@ -75,14 +75,22 @@ class BuscaBca extends Component
     {
         $this->data = now()->format('Y-m-d');
         $this->palavrasDisponiveis = PalavraChave::orderBy('palavra')->get()->toArray();
+        $this->palavrasSelecionadas = PalavraChave::ativa()->pluck('palavra')->toArray();
     }
 
     public function togglePalavra(string $palavra): void
     {
+        $p = PalavraChave::where('palavra', $palavra)->first();
+        if (! $p) {
+            return;
+        }
+
         if (in_array($palavra, $this->palavrasSelecionadas)) {
             $this->palavrasSelecionadas = array_values(array_diff($this->palavrasSelecionadas, [$palavra]));
+            $p->update(['ativa' => false]);
         } else {
             $this->palavrasSelecionadas[] = $palavra;
+            $p->update(['ativa' => true]);
         }
     }
 
@@ -118,11 +126,20 @@ class BuscaBca extends Component
             return;
         }
 
+        $ativasNoBanco = PalavraChave::ativa()->pluck('palavra')->toArray();
+        $diff1 = array_diff($this->palavrasSelecionadas, $ativasNoBanco);
+        $diff2 = array_diff($ativasNoBanco, $this->palavrasSelecionadas);
+        $keywordsSelecionadasDiferentes = ! empty($diff1) || ! empty($diff2);
+
         $bca = Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
-        if ($bca) {
+        if ($bca && ! $keywordsSelecionadasDiferentes) {
             $this->finalizarBusca($bca);
 
             return;
+        }
+
+        if ($bca && $keywordsSelecionadasDiferentes) {
+            $bca->update(['analisado_em' => null]);
         }
 
         try {
@@ -137,9 +154,9 @@ class BuscaBca extends Component
         }
 
         $bca = Bca::where('data', $this->data)->whereNotNull('processado_em')->first();
-        if ($bca) {
+        if ($bca && ! $keywordsSelecionadasDiferentes) {
             $this->finalizarBusca($bca);
-        } else {
+        } elseif (! $bca) {
             $execucao = BcaExecucao::where('status', 'sem_bca')
                 ->where('mensagem', 'like', "%{$this->data}%")
                 ->latest()->first();
@@ -207,11 +224,17 @@ class BuscaBca extends Component
             })->toArray();
 
         $cacheData = Cache::get("bca:analise:{$bca->data->format('Y-m-d')}");
-        $this->keywordsEncontradas = $cacheData['keywords'] ?? [];
+        $this->keywordsResultados = $cacheData['keywords'] ?? $bca->keywords_encontradas ?? [];
 
-        $n = count($this->ocorrencias);
-        $this->mensagem = $n > 0 ? "{$n} militar(es) encontrado(s)." : 'BCA processado, nenhum militar encontrado.';
-        $this->mensagemTipo = $n > 0 ? 'success' : 'warning';
+        $nMil = count($this->ocorrencias);
+        $nKw  = count($this->keywordsResultados);
+        $this->mensagem = match(true) {
+            $nMil > 0 && $nKw > 0 => "{$nMil} militar(es) e {$nKw} palavra(s)-chave encontrada(s).",
+            $nMil > 0              => "{$nMil} militar(es) encontrado(s).",
+            $nKw  > 0              => "{$nKw} palavra(s)-chave encontrada(s). Nenhum militar.",
+            default                => 'BCA processado, nenhuma ocorrência encontrada.',
+        };
+        $this->mensagemTipo = ($nMil > 0 || $nKw > 0) ? 'success' : 'warning';
         $this->buscando = false;
     }
 

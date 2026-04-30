@@ -76,6 +76,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE:-bca_db}
       POSTGRES_USER: ${DB_USERNAME:-bca_user}
@@ -108,8 +109,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "15050:80"
-    profiles:
-      - dev
     networks:
       - bca_network
 

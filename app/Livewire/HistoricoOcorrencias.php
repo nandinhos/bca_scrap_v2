@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Models\BcaOcorrencia;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+#[Layout('layouts.app')]
+#[Title('Histórico')]
+class HistoricoOcorrencias extends Component
+{
+    use WithPagination;
+
+    public string $filtroData = '';
+
+    public string $filtroMilitar = '';
+
+    public function updatedFiltroData(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFiltroMilitar(): void
+    {
+        $this->resetPage();
+    }
+
+    public function render()
+    {
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $userUnidadeId = $user?->unidade_id;
+
+        $query = BcaOcorrencia::with(['efetivo', 'bca'])
+            ->when(! $isAdmin && $userUnidadeId, function ($q) use ($userUnidadeId) {
+                $q->whereHas('efetivo', fn ($sub) => $sub->where('unidade_id', $userUnidadeId));
+            })
+            ->orderByDesc('created_at');
+
+        if ($this->filtroData) {
+            $query->whereHas('bca', fn ($q) => $q->whereDate('data', $this->filtroData));
+        }
+        if ($this->filtroMilitar) {
+            $query->whereHas('efetivo', fn ($q) => $q->where('nome_guerra', 'ilike', "%{$this->filtroMilitar}%")->orWhere('nome_completo', 'ilike', "%{$this->filtroMilitar}%"));
+        }
+
+        return view('livewire.historico-ocorrencias', ['ocorrencias' => $query->paginate(15)]);
+    }
+}

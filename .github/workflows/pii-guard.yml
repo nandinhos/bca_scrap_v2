@@ -1,0 +1,74 @@
+name: Guarda de PII
+
+# Impede a reintrodução acidental de dados pessoais/institucionais no repositório.
+# Dois níveis:
+#   1) Gate público  — padrões genéricos, visíveis neste arquivo.
+#   2) Gate privado  — padrões específicos da OM mantenedora, definidos no secret
+#      PII_PATTERNS (regex ERE). Nos logs são exibidos apenas caminhos/hashes,
+#      nunca o conteúdo. Forks/instalações de outras OMs não têm o secret e
+#      pulam esta etapa automaticamente.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pii-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (histórico completo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gate público — padrões genéricos (arquivos e mensagens)
+        run: |
+          set -euo pipefail
+          PATTERNS='@fab\.mil\.br|REDACTED|PADRAO'
+
+          echo "==> Varredura dos arquivos rastreados..."
+          if git grep -InE "$PATTERNS" -- ':!composer.lock' ':!.github/workflows/pii-guard.yml'; then
+            echo '::error::Padrão de PII/artefato de sanitização encontrado nos arquivos acima.'
+            exit 1
+          fi
+
+          echo "==> Varredura das mensagens de commit..."
+          FAIL=0
+          for c in $(git rev-list HEAD); do
+            if git log -1 --format='%B' "$c" | grep -qE "$PATTERNS"; then
+              echo "::error::Commit $c contém padrão proibido na mensagem."
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -ne 0 ]; then exit 1; fi
+          echo "OK: gate público limpo."
+
+      - name: Gate privado — padrões da OM (secret PII_PATTERNS)
+        env:
+          PII_PATTERNS: ${{ secrets.PII_PATTERNS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PII_PATTERNS:-}" ]; then
+            echo "Secret PII_PATTERNS ausente (fork/outra OM) — etapa ignorada."
+            exit 0
+          fi
+
+          echo "==> Varredura dos arquivos rastreados (somente caminhos são exibidos)..."
+          HITS=$(git grep -IliE "$PII_PATTERNS" -- ':!composer.lock' || true)
+          if [ -n "$HITS" ]; then
+            echo '::error::Padrão sensível encontrado nos arquivos abaixo (conteúdo omitido):'
+            echo "$HITS"
+            exit 1
+          fi
+
+          echo "==> Varredura das mensagens de commit (somente hashes são exibidos)..."
+          FAIL=0
+          for c in $(git rev-list HEAD); do
+            if git log -1 --format='%B' "$c" | grep -qiE "$PII_PATTERNS"; then
+              echo "::error::Commit $c contém padrão sensível na mensagem (conteúdo omitido)."
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -ne 0 ]; then exit 1; fi
+          echo "OK: gate privado limpo."

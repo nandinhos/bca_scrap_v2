@@ -83,14 +83,35 @@ class BuscaBca extends Component
             ->orderBy('palavra')
             ->get()
             ->toArray();
+
+        $this->palavrasSelecionadas = PalavraChave::query()
+            ->where('ativa', true)
+            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->pluck('palavra')
+            ->toArray();
     }
 
     public function togglePalavra(string $palavra): void
     {
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $userUnidadeId = $user?->unidade_id;
+
+        $p = PalavraChave::query()
+            ->where('palavra', $palavra)
+            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->first();
+
+        if (! $p) {
+            return;
+        }
+
         if (in_array($palavra, $this->palavrasSelecionadas)) {
             $this->palavrasSelecionadas = array_values(array_diff($this->palavrasSelecionadas, [$palavra]));
+            $p->update(['ativa' => false]);
         } else {
             $this->palavrasSelecionadas[] = $palavra;
+            $p->update(['ativa' => true]);
         }
     }
 
@@ -126,11 +147,29 @@ class BuscaBca extends Component
             return;
         }
 
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $userUnidadeId = $user?->unidade_id;
+
+        $ativasNoBanco = PalavraChave::query()
+            ->where('ativa', true)
+            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->pluck('palavra')
+            ->toArray();
+
+        $diff1 = array_diff($this->palavrasSelecionadas, $ativasNoBanco);
+        $diff2 = array_diff($ativasNoBanco, $this->palavrasSelecionadas);
+        $keywordsSelecionadasDiferentes = ! empty($diff1) || ! empty($diff2);
+
         $bca = Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
-        if ($bca) {
+        if ($bca && ! $keywordsSelecionadasDiferentes) {
             $this->finalizarBusca($bca);
 
             return;
+        }
+
+        if ($bca && $keywordsSelecionadasDiferentes) {
+            $bca->update(['analisado_em' => null, 'processado_em' => null]);
         }
 
         try {
@@ -145,7 +184,7 @@ class BuscaBca extends Component
         }
 
         $bca = Bca::where('data', $this->data)->whereNotNull('processado_em')->first();
-        if ($bca) {
+        if ($bca && ! $keywordsSelecionadasDiferentes) {
             $this->finalizarBusca($bca);
         } else {
             $execucao = BcaExecucao::where('status', 'sem_bca')
@@ -224,11 +263,17 @@ class BuscaBca extends Component
             })->toArray();
 
         $cacheData = Cache::get("bca:analise:{$bca->data->format('Y-m-d')}");
-        $this->keywordsEncontradas = $cacheData['keywords'] ?? [];
+        $this->keywordsEncontradas = $cacheData['keywords'] ?? $bca->keywords_encontradas ?? [];
 
-        $n = count($this->ocorrencias);
-        $this->mensagem = $n > 0 ? "{$n} militar(es) encontrado(s)." : 'BCA processado, nenhum militar encontrado.';
-        $this->mensagemTipo = $n > 0 ? 'success' : 'warning';
+        $nMil = count($this->ocorrencias);
+        $nKw = count($this->keywordsEncontradas);
+        $this->mensagem = match (true) {
+            $nMil > 0 && $nKw > 0 => "{$nMil} militar(es) e {$nKw} palavra(s)-chave encontrada(s).",
+            $nMil > 0 => "{$nMil} militar(es) encontrado(s).",
+            $nKw > 0 => "{$nKw} palavra(s)-chave encontrada(s). Nenhum militar.",
+            default => 'BCA processado, nenhuma ocorrência encontrada.',
+        };
+        $this->mensagemTipo = ($nMil > 0 || $nKw > 0) ? 'success' : 'warning';
         $this->buscando = false;
     }
 
@@ -242,12 +287,7 @@ class BuscaBca extends Component
             EnviarEmailNotificacaoJob::dispatch($ocorrenciaId);
             $this->notification = "✓ Email enviado para {$oc->efetivo->nome_guerra}";
             if ($this->bcaId) {
-                $this->ocorrencias = BcaOcorrencia::with('efetivo')
-                    ->where('bca_id', $this->bcaId)->get()->map(function ($oc) {
-                        return array_merge($oc->toArray(), [
-                            'saram' => $oc->efetivo->saram,
-                        ]);
-                    })->toArray();
+                $this->reloadOcorrencias();
             }
         }
         $this->enviandoEmail = false;
@@ -267,15 +307,30 @@ class BuscaBca extends Component
                 $this->notification = "✗ Falha ao enviar email: {$e->getMessage()}";
             }
             if ($this->bcaId) {
-                $this->ocorrencias = BcaOcorrencia::with('efetivo')
-                    ->where('bca_id', $this->bcaId)->get()->map(function ($oc) {
-                        return array_merge($oc->toArray(), [
-                            'saram' => $oc->efetivo->saram,
-                        ]);
-                    })->toArray();
+                $this->reloadOcorrencias();
             }
         }
         $this->enviandoEmail = false;
+    }
+
+    private function reloadOcorrencias(): void
+    {
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $userUnidadeId = $user?->unidade_id;
+
+        $this->ocorrencias = BcaOcorrencia::with('efetivo')
+            ->where('bca_id', $this->bcaId)
+            ->whereHas('efetivo', function ($q) use ($isAdmin, $userUnidadeId) {
+                if (! $isAdmin && $userUnidadeId) {
+                    $q->where('unidade_id', $userUnidadeId);
+                }
+            })
+            ->get()->map(function ($oc) {
+                return array_merge($oc->toArray(), [
+                    'saram' => $oc->efetivo->saram,
+                ]);
+            })->toArray();
     }
 
     public function enviarTodos(): void
@@ -284,9 +339,19 @@ class BuscaBca extends Component
             return;
         }
 
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $userUnidadeId = $user?->unidade_id;
+
         $count = 0;
-        $pendentes = BcaOcorrencia::where('bca_id', $this->bcaId)
+        $pendentes = BcaOcorrencia::query()
+            ->where('bca_id', $this->bcaId)
             ->whereNull('enviado_em')
+            ->whereHas('efetivo', function ($q) use ($isAdmin, $userUnidadeId) {
+                if (! $isAdmin && $userUnidadeId) {
+                    $q->where('unidade_id', $userUnidadeId);
+                }
+            })
             ->get();
 
         foreach ($pendentes as $oc) {

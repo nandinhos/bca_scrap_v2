@@ -26,7 +26,9 @@
                     <td style="padding:12px 20px;color:#94a3b8;font-size:12px;max-width:300px">
                         @if($ex->mensagem)
                             @php $msg = json_decode($ex->mensagem, true); @endphp
-                            @if(isset($msg['keywords_encontradas'])) Keywords: {{ implode(', ', $msg['keywords_encontradas']) }}
+                            @if(is_array($msg) && isset($msg['keywords_encontradas']) && is_array($msg['keywords_encontradas']))
+                                @php $kws = array_keys($msg['keywords_encontradas']); @endphp
+                                Keywords: {{ implode(', ', $kws) }}
                             @else {{ Str::limit($ex->mensagem, 80) }} @endif
                         @endif
                     </td>

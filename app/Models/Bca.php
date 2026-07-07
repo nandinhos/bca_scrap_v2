@@ -11,7 +11,7 @@ class Bca extends Model
     use HasFactory;
 
     protected $fillable = [
-        'numero', 'data', 'url', 'texto_completo', 'processado_em', 'analisado_em',
+        'numero', 'data', 'url', 'texto_completo', 'processado_em', 'analisado_em', 'keywords_encontradas',
     ];
 
     protected function casts(): array
@@ -20,6 +20,7 @@ class Bca extends Model
             'data' => 'date',
             'processado_em' => 'datetime',
             'analisado_em' => 'datetime',
+            'keywords_encontradas' => 'array',
         ];
     }
 

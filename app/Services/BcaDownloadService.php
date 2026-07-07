@@ -72,8 +72,8 @@ class BcaDownloadService
     public function buscarUrlBca(string $data): ?string
     {
         $carbon = Carbon::parse($data);
-        $dia = $carbon->format('d');
-        $mes = $carbon->format('m');
+        $dia = $carbon->format('j');
+        $mes = $carbon->format('n');
         $ano = $carbon->year;
         $iceaBase = config('bca.icea_url', 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/');
 
@@ -201,6 +201,8 @@ class BcaDownloadService
 
             $path = "bcas/{$data}.pdf";
             Storage::disk('public')->put($path, $body);
+
+            Cache::put("bca:url:{$data}", $url, now()->addDays(30));
 
             return $path;
         } catch (\Exception $e) {

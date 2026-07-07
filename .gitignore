@@ -1,7 +1,10 @@
 *.log
+*.bak
+*.bak-*
 .DS_Store
 .env
 .env.backup
+.env.bak-*
 .env.production
 .phpactor.json
 .phpunit.result.cache
@@ -19,9 +22,15 @@
 /storage/*.key
 /storage/pail
 /vendor
+docker-compose.yml.bak-*
+docker-compose.yml.backup
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Operacional (referências a ambiente de produção, dados sensíveis)
+AGENTS.md
+public/sample_efetivo.csv
 
 .devorq/
 .opencode/

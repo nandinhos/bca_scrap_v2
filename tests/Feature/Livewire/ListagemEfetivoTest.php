@@ -34,7 +34,7 @@ it('admin pode criar efetivo', function () {
         ->set('nomeCompleto', 'SILVA SANTOS')
         ->set('nomeGuerra', 'SILVA')
         ->set('saram', '1234567')
-        ->set('email', 'silva@fab.mil.br')
+        ->set('email', 'silva@example.com')
         ->set('posto', 'Sgt')
         ->call('save')
         ->assertHasNoErrors();

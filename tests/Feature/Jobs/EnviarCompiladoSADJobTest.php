@@ -24,7 +24,7 @@ it('sends compiled report to SAD when there are occurrences', function () {
     ]);
 
     $efetivo = Efetivo::factory()->create([
-        'email' => 'militar@fab.mil.br',
+        'email' => 'militar@example.com',
         'unidade_id' => $unidade->id,
     ]);
 
@@ -60,7 +60,7 @@ it('does not send email when sad_email is not configured', function () {
 
     config(['bca.sad_email' => null]);
 
-    $efetivo = Efetivo::factory()->create(['email' => 'militar@fab.mil.br']);
+    $efetivo = Efetivo::factory()->create(['email' => 'militar@example.com']);
     $bca = Bca::factory()->create();
 
     BcaOcorrencia::create([

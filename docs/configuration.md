@@ -23,7 +23,7 @@ Toda a configuração vive no arquivo `.env` (copie de `.env.example`). O instal
 | Variável | Default | Obrigatória | Descrição |
 |---|---|---|---|
 | `ADMIN_NAME` | `Administrador` | Não | Nome do usuário admin criado no primeiro seed. |
-| `ADMIN_EMAIL` | `admin@fab.mil.br` | Sim | E-mail de login do admin. |
+| `ADMIN_EMAIL` | `admin@example.com` | Sim | E-mail de login do admin. |
 | `ADMIN_PASSWORD` | `changeme123` | Sim | **Troque por uma senha forte.** |
 
 ### Organização Militar inicial (lido pelo `UnidadeSeeder`)

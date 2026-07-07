@@ -33,10 +33,10 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
-# URLs
-readonly REPO_URL="https://github.com/nandinhos/bca_scrap_v2.git"
-readonly REPO_BRANCH="main"
-readonly COMPOSE_URL="https://raw.githubusercontent.com/nandinhos/bca_scrap_v2/${REPO_BRANCH}/docker-compose.yml"
+# URLs (configure via env para apontar para o seu fork/org)
+readonly REPO_URL="${BCA_REPO_URL:-https://github.com/nandinhos/bca_scrap_v2.git}"
+readonly REPO_BRANCH="${BCA_REPO_BRANCH:-main}"
+readonly COMPOSE_URL="${BCA_COMPOSE_URL:-https://raw.githubusercontent.com/nandinhos/bca_scrap_v2/${REPO_BRANCH}/docker-compose.yml}"
 
 # Defaults
 INSTALL_DIR="${BCA_INSTALL_DIR:-./bca_scrap_v2}"

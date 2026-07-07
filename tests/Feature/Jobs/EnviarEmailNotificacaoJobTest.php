@@ -14,7 +14,7 @@ it('sends email to efetivo and marks enviado_em', function () {
     Mail::fake();
 
     $efetivo = Efetivo::factory()->create([
-        'email' => 'test@fab.mil.br',
+        'email' => 'test@example.com',
         'oculto' => false,
     ]);
     $bca = Bca::factory()->create();
@@ -26,7 +26,7 @@ it('sends email to efetivo and marks enviado_em', function () {
 
     EnviarEmailNotificacaoJob::dispatch($ocorrencia->id);
 
-    Mail::assertSent(NotificacaoBcaMail::class, fn ($mail) => $mail->hasTo('test@fab.mil.br'));
+    Mail::assertSent(NotificacaoBcaMail::class, fn ($mail) => $mail->hasTo('test@example.com'));
     expect($ocorrencia->fresh()->enviado_em)->not->toBeNull();
 });
 
@@ -34,7 +34,7 @@ it('skips email for oculto efetivo', function () {
     Mail::fake();
 
     $efetivo = Efetivo::factory()->create([
-        'email' => 'test@fab.mil.br',
+        'email' => 'test@example.com',
         'oculto' => true,
     ]);
     $bca = Bca::factory()->create();

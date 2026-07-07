@@ -57,16 +57,27 @@ class HealthController extends Controller
             ->pluck('total', 'status')
             ->toArray();
 
-        $tempoMedio = BcaExecucao::where('data_execucao', '>=', now()->subDays(7))
-            ->whereNotNull('data_execucao')
-            ->select(DB::raw('avg(extract(epoch from (data_execucao - lag(data_execucao) over (order by data_execucao)))) as tempo_medio'))
-            ->first();
+        $tempoMedio = null;
+        try {
+            $diffSegundos = DB::table('bca_execucoes')
+                ->where('data_execucao', '>=', now()->subDays(7))
+                ->whereNotNull('data_execucao')
+                ->select(DB::raw("extract(epoch from (data_execucao - lag(data_execucao) over (order by data_execucao))) as diff"))
+                ->get()
+                ->pluck('diff')
+                ->filter()
+                ->values();
+
+            $tempoMedio = $diffSegundos->isNotEmpty() ? round($diffSegundos->avg(), 2) : null;
+        } catch (\Throwable $e) {
+            $tempoMedio = null;
+        }
 
         return response()->json([
             'periodo' => 'ultimos_7_dias',
             'total_execucoes' => array_sum($ultimos7dias),
             'por_status' => $ultimos7dias,
-            'tempo_medio_segundos' => null,
+            'tempo_medio_segundos' => $tempoMedio,
         ]);
     }
 }

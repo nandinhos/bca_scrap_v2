@@ -5,7 +5,11 @@
             <p style="font-size:13px;color:#94a3b8;margin:2px 0 0">Ative as palavras que devem ser buscadas no BCA</p>
         </div>
         @if(auth()->user()->isAdmin())
-        <button wire:click="openCreate" style="background:#1e3a5f;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">+ Nova</button>
+        <div style="display:flex;gap:8px">
+            <button wire:click="toggleAll(true)" style="background:#16a34a;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Ativar todos</button>
+            <button wire:click="toggleAll(false)" style="background:#64748b;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Desativar todos</button>
+            <button wire:click="openCreate" style="background:#1e3a5f;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">+ Nova</button>
+        </div>
         @endif
     </div>
 

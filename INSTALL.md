@@ -187,7 +187,7 @@ docker compose restart queue
 Se sua OM tem acesso direto ao BCA da FAB:
 
 ```dotenv
-BCA_PDF_URL=https://www.fab.mil.br/organizacoes/ciaar/cpex/bca.pdf
+BCA_PDF_URL=https://<<SUA_OM>>.fab.mil.br/caminho/para/o/bca.pdf
 ```
 
 O sistema vai baixar e processar automaticamente a cada 6 horas.

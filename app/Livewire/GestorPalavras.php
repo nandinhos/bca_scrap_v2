@@ -57,6 +57,19 @@ class GestorPalavras extends Component
         $this->reload();
     }
 
+    public function toggleAll(bool $ativa): void
+    {
+        $this->ensureAdmin();
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $userUnidadeId = $user?->unidade_id;
+
+        PalavraChave::query()
+            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->update(['ativa' => $ativa]);
+        $this->reload();
+    }
+
     public function openCreate(): void
     {
         $this->ensureAdmin();

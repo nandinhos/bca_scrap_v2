@@ -16,12 +16,21 @@ class BcaProcessingService
     public function processarPdf(Bca $bca): ?string
     {
         $cacheKey = "bca:texto:{$bca->data->format('Y-m-d')}";
+        $urlCacheKey = "bca:url:{$bca->data->format('Y-m-d')}";
+
         $cached = Cache::get($cacheKey);
+        $cachedUrl = Cache::get($urlCacheKey);
 
         if ($cached !== null) {
-            Log::info("BCA [{$bca->data}]: texto from cache");
+            if ($cachedUrl && $bca->url && $cachedUrl !== $bca->url) {
+                Log::info("BCA [{$bca->data}]: URL changed (cached={$cachedUrl}, current={$bca->url}) — invalidating text cache");
+                Cache::forget($cacheKey);
+                Cache::forget($urlCacheKey);
+            } else {
+                Log::info("BCA [{$bca->data}]: texto from cache");
 
-            return $cached;
+                return $cached;
+            }
         }
 
         if (! $bca->url) {
@@ -68,7 +77,11 @@ class BcaProcessingService
 
             // Cache for 30 days
             $cacheKey = "bca:texto:{$bca->data->format('Y-m-d')}";
+            $urlCacheKey = "bca:url:{$bca->data->format('Y-m-d')}";
             Cache::put($cacheKey, $text, now()->addDays(30));
+            if ($bca->url) {
+                Cache::put($urlCacheKey, $bca->url, now()->addDays(30));
+            }
 
             // Update DB
             $bca->update([

@@ -1,5 +1,5 @@
 {
-    "name": "bca-scrap/bca-scrap-v2",
+    "name": "nandinhos/bca_scrap_v2",
     "type": "project",
     "description": "Sistema de Busca e Análise de Boletins de Comando da Aeronáutica - Laravel 12 TALL Stack",
     "keywords": ["laravel", "livewire", "tall-stack", "bca"],

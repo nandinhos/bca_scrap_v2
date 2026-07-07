@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "nandinhos/bca_scrap_v2",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Sistema de busca e notificação em Boletins do Comando da Aeronáutica (BCA), multi-unidade.",
+    "keywords": ["laravel", "livewire", "bca", "aeronautica", "boletim"],
     "license": "MIT",
     "require": {
         "php": "^8.2",

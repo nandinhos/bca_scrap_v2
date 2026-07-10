@@ -26,9 +26,14 @@ O instalador vai pedir:
 - Nome da OM
 - Sigla
 - Email e senha do administrador
+- **Email da SAD/Secretaria** que recebe o compilado diário
 - Senha do banco PostgreSQL
 
-Tudo o resto é automático.
+Para tudo o resto, há defaults seguros. Você pode ajustar depois no `.env`.
+
+> **Dica:** se você não souber o e-mail da SAD agora, deixe vazio (o sistema
+> irá mostrar um aviso e o compilado diário NÃO será enviado até você preencher).
+> Apenas os e-mails individuais para os militares continuarão funcionando.
 
 ---
 

@@ -161,6 +161,9 @@ prompt ADMIN_NAME  "Nome do administrador" "Administrador"
 prompt ADMIN_EMAIL "Email do administrador" ""
 prompt ADMIN_PASSWORD "Senha do administrador (mínimo 8 caracteres)" "$(generate_random 16)" true
 
+# SAD (Secretaria / Sec.Exec.) — recebe o compilado diário
+prompt SAD_EMAIL    "Email da SAD/Secretaria que recebe o compilado diário (deixe vazio para desativar envio)" "${ADMIN_EMAIL}"
+
 # DB
 prompt DB_DATABASE "Nome do banco de dados" "bca_db"
 prompt DB_USERNAME "Usuário do banco" "bca_user"
@@ -248,8 +251,13 @@ MAIL_MAILER=log
 MAIL_FROM_ADDRESS="${ADMIN_EMAIL}"
 MAIL_FROM_NAME="\${APP_NAME}"
 
-# BCA Source (configurar depois)
-BCA_PDF_URL=
+# BCA Source (deixe vazio para usar defaults CENDOC/ICEA)
+BCA_BASE_URL=
+BCA_ICEA_URL=
+
+# SAD — e-mail da secretaria que recebe o compilado diario.
+# Se vazio, o compilado NAO sera enviado (apenas e-mails individuais).
+BCA_SAD_EMAIL="${SAD_EMAIL}"
 
 # Sessão
 SESSION_LIFETIME=120
@@ -311,6 +319,20 @@ docker compose exec -T php php artisan db:seed --force \
 ok "Banco configurado"
 
 # ============================================================
+# 9.5 Aviso sobre configuracao pendente
+# ============================================================
+if [[ -z "${SAD_EMAIL}" ]]; then
+    warn "BCA_SAD_EMAIL esta vazio — compilado diario NAO sera enviado."
+    warn "Edite o .env e adicione: BCA_SAD_EMAIL=sua-sad@suaom.fab.mil.br"
+    warn "Depois reinicie: docker compose exec -T php php artisan config:clear && docker compose restart queue"
+fi
+
+if [[ "$MAIL_MAILER" == "log" ]]; then
+    warn "MAIL_MAILER=log — e-mails serao gravados em storage/logs/laravel.log (nao enviados)."
+    warn "Para envio real, edite o .env e configure: MAIL_MAILER=smtp + MAIL_HOST/USER/PASSWORD."
+fi
+
+# ============================================================
 # 10. Storage link
 # ============================================================
 log "Criando link simbólico de storage..."
@@ -358,9 +380,10 @@ ${GREEN}╚═══════════════════════
   ${BLUE}Próximos passos:${NC}
     1. Acesse http://localhost:${HTTP_PORT}
     2. Faça login com as credenciais acima
-    3. Cadastre o efetivo da sua OM em /efetivo
-    4. Configure SMTP em .env (opcional, padrão é log)
-    5. Configure BCA_PDF_URL em .env (URL do BCA diário)
+    3. Cadastre o efetivo da sua OM em /efetivo (ou importar CSV)
+    4. Configure SMTP em .env se quiser envio real de e-mails
+    5. Edite BCA_SAD_EMAIL em .env com o e-mail da SAD da sua OM
+    6. Se usar fontes BCA diferentes, sobrescreva BCA_BASE_URL e BCA_ICEA_URL
 
   ${YELLOW}IMPORTANTE:${NC}
     - Salve a senha do admin em local seguro

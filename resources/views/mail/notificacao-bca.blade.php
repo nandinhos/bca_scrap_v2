@@ -28,8 +28,8 @@ body{margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Arial,sa
         @if($ocorrencia->snippet)
         <div class="snippet">{!! strip_tags($ocorrencia->snippet) !!}</div>
         @endif
-        @if($ocorrencia->bca->url)
-        <a href="{{ $ocorrencia->bca->url }}" class="btn">Ver BCA completo →</a>
+        @if($bcaDownloadUrl ?? null)
+        <a href="{{ $bcaDownloadUrl }}" class="btn">Ver BCA completo →</a>
         @endif
     </div>
     <div class="ft">Email automático — {{ config('app.name', 'BCA Scrap') }} · FAB</div>

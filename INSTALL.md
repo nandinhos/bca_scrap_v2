@@ -184,13 +184,14 @@ docker compose restart queue
 
 ### Configurar URL do BCA (opcional)
 
-Se sua OM tem acesso direto ao BCA da FAB:
+As URLs das fontes do BCA ja vem com defaults genericos (CENDOC/ICEA) no `.env.example`. Se sua OM usa endpoints diferentes, sobrescreva:
 
 ```dotenv
-BCA_PDF_URL=https://<<SUA_OM>>.fab.mil.br/caminho/para/o/bca.pdf
+BCA_BASE_URL=http://www.cendoc.intraer/sisbca/consulta_bca/
+BCA_ICEA_URL=http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/
 ```
 
-O sistema vai baixar e processar automaticamente a cada 6 horas.
+O sistema vai baixar e processar automaticamente nos horarios agendados.
 
 ---
 

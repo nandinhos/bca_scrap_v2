@@ -9,6 +9,12 @@ class EfetivoSeeder extends Seeder
 {
     public function run(): void
     {
+        // Gate: nao polui prod com EXEMPLO*. Em prod o OM importa CSV real.
+        if (app()->environment('production')) {
+            $this->command?->warn("EfetivoSeeder: pulando em production (importe CSV real pelo painel).");
+            return;
+        }
+
         $efetivos = [
             ['saram' => '1000001', 'nome_guerra' => 'EXEMPLO1',   'nome_completo' => 'MILITAR EXEMPLO UM',            'posto' => 'Ten Cel',   'email' => 'exemplo1@bca.local'],
             ['saram' => '1000002', 'nome_guerra' => 'EXEMPLO2',   'nome_completo' => 'MILITAR EXEMPLO DOIS',          'posto' => 'Maj',       'email' => 'exemplo2@bca.local'],

@@ -4,7 +4,7 @@
 
 ## Veredito
 
-**Não está pronto para produção nem para piloto multi-OM com dados reais.** O risco dominante é quebra de isolamento entre unidades: operadores sem OM recebem consultas globais, ações Livewire aceitam IDs de ocorrências de outras OMs, resultados de palavras-chave e o compilado SAD são globais. A distribuição também expõe PDFs e instala por um canal mutável, sem TLS obrigatório ou build reproduzível.
+**Ainda não está pronto para distribuição a outras OMs.** No modelo confirmado, não existe mistura de dados entre OMs em runtime. Os bloqueadores reais são: instalação limpa que hoje pode abortar ou desconfigurar as fontes BCA, operações destrutivas de reanálise, testes que podem usar configuração operacional, confiabilidade da fila/e-mail e recuperação comprovada. O modo multi-OM que ainda existe no código deve ser indisponibilizado para evitar uso fora do desenho aprovado.
 
 ## Números
 
@@ -20,11 +20,11 @@
 
 ## Cinco riscos principais
 
-1. **Isolamento fail-open e IDOR:** um operador sem unidade vê dados globais; IDs Livewire permitem pré-visualizar PII e enviar e-mails de outra OM. [Evidência](areas/01-auth-tenancy.md)
-2. **Artefatos e comunicação cross-OM:** PDFs ficam públicos e o compilado SAD reúne todas as unidades para um e-mail global. [Evidência](areas/02-fluxos-bca.md)
-3. **Destruição de dados:** reanálise apaga ocorrências antes do substituto; CSV pode reassociar o efetivo de várias OMs. [Evidência](areas/03-dados-pii.md)
-4. **Cadeia de entrega insegura:** instalação executa `main` remoto, expõe senha, usa HTTP e não consegue montar um clone limpo. [Evidência](areas/05-infra-config.md)
-5. **Confiabilidade e testes insuficientes:** caminho documentado de Pest direto pode atingir banco operacional; jobs podem duplicar e-mails e compilados. [Evidência](areas/04-jobs-notificacoes.md)
+1. **Instalação e release:** o instalador atual pode abortar por `MAIL_MAILER` não definido e grava URLs BCA vazias, além de ainda não prover uma instalação limpa reproduzível. [Evidência](02-reconsideracao-pos-integracao.md)
+2. **Reanálise destrutiva:** ocorrências são apagadas antes de haver substituto válido e o caminho `--redownload` pode reenviar notificações. [Evidência](02-reconsideracao-pos-integracao.md)
+3. **Testes seguros:** a execução direta de Pest pode herdar configuração operacional; é necessário travar banco, fila e e-mail de teste. [Evidência](areas/08-testes-qualidade.md)
+4. **Fluxo BCA e PDF:** validar a origem corporativa, redirects, tamanho e assinatura do arquivo antes do parser. [Evidência](areas/02-fluxos-bca.md)
+5. **Fila e autorização interna:** jobs precisam transportar a supressão de e-mail e as ações de prévia/envio devem validar o objeto e o papel do operador. [Evidência](02-reconsideracao-pos-integracao.md)
 
 ## Pontos sólidos
 

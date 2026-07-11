@@ -9,5 +9,5 @@ O BCA é um boletim ostensivo disponível na infraestrutura corporativa. A insta
 ## Estado de conformidade
 
 - A implementação atual ainda contém telas e campos para múltiplas unidades no mesmo banco; esse modo está **fora de escopo e não suportado** pela decisão [ADR 0001](adr/0001-uma-instancia-por-om.md).
-- A auditoria de 2026-07-10 foi reclassificada em 2026-07-11 para a topologia de uma OM por instalação. Consulte [docs/deep-analysis](deep-analysis/README.md).
-- Ainda permanecem bloqueadores independentes de multi-tenancy: instalação reproduzível, testes isolados, integridade da fonte BCA/PDF, reanálise, filas/e-mails, backups, segredos e atualização de dependências.
+- A auditoria de 2026-07-10 foi reclassificada e reconsiderada após a integração dos releases `v1.0.1` a `v1.0.3` em 2026-07-11. Consulte [docs/deep-analysis](deep-analysis/README.md).
+- O plano mínimo antes da distribuição é composto por seis frentes: instalação/release, bloqueio do modo multi-OM, testes isolados, reanálise/CSV não destrutivos, ingestão BCA/PDF e fila/e-mail com autorização interna. Backup/restore comprovado segue como condição do piloto controlado.

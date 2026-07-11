@@ -3,6 +3,7 @@
 Auditoria realizada em 2026-07-10 para avaliar segurança, funcionalidade, dívida técnica e preparo para distribuição a outras OMs.
 
 - [Resumo executivo](00-executive-summary.md)
+- [Reconsideração após integração](02-reconsideracao-pos-integracao.md)
 - [Metodologia e cobertura](01-methodology.md)
 - [Roadmap priorizado](roadmap.md)
 - [Mapa de fluxos](flows.md)

@@ -8,27 +8,23 @@ O sistema deve permanecer em desenvolvimento com dados sintéticos até concluir
 
 | # | Título | Área | Esforço | Por quê |
 |---|---|---|---|---|
-| P0-1 | Isolamento fail-closed e autorização por objeto | Segurança/tenancy | XL | Elimina visão global de operador sem OM e IDOR de ocorrência. |
-| P0-2 | PDFs privados por rota autorizada | Dados/armazenamento | M | URL previsível no disk público contorna autenticação. |
-| P0-3 | Estado, cache, palavras e SAD por OM | Arquitetura multi-OM | XL | Evita resultados e PII cruzados entre unidades. |
-| P0-4 | Harness de testes isolado | Testes | M | Impede `migrate:fresh` e efeitos externos contra infraestrutura operacional. |
-| P0-5 | Release imutável e instalação limpa reproduzível | Supply chain | L | O fluxo atual executa código mutável e não instala dependências/assets. |
-| P0-6 | TLS e segredos obrigatórios | Infra | M | Evita credenciais/cookies em HTTP e senha em terminal. |
-| P0-7 | Ingestão segura de PDF | Integrações | L | Fonte HTTP e redirects não validados podem adulterar boletins e explorar parser. |
-| P0-8 | Idempotência de jobs e compilado SAD consistente | Filas/e-mail | L | Evita duplicatas, relatório parcial e reenvio indevido. |
-| P0-9 | Atualizar dependências vulneráveis | Dependências | M | Há advisories runtime e lock divergente. |
-| P0-10 | Preservar unidade em CSV e reanálise | Dados | M | Operações administrativas atuais podem reatribuir ou apagar histórico. |
+| P0-1 | Instalação limpa e release identificável | Distribuição | L | Corrigir os defeitos do instalador, instalar dependências/build e registrar versão/commit distribuído. |
+| P0-2 | Impedir o modo multi-OM | Arquitetura | M | Manter exatamente uma OM por banco e remover ou bloquear as telas/rotas de segunda unidade. |
+| P0-3 | Harness de testes isolado | Testes | M | Impedir `migrate:fresh`, fila ou e-mail contra configuração operacional. |
+| P0-4 | Reanálise e CSV não destrutivos | Dados | L | Gerar e validar o substituto antes da troca; preservar ocorrências/notificações ou exigir modo explícito. |
+| P0-5 | Ingestão BCA proporcionalmente segura | Integrações | M | Restringir origem corporativa, redirects, tamanho e tipo de PDF; limitar o parser. |
+| P0-6 | Fila/e-mail confiáveis e autorização interna | Operação | L | Propagar supressão de e-mail para jobs, deduplicar entregas e validar o objeto nas ações sensíveis. |
 
 ## P1 — piloto controlado
 
 | # | Título | Área | Esforço | Por quê |
 |---|---|---|---|---|
 | P1-1 | Backup, restore e RPO/RTO comprovados | Continuidade | L | PostgreSQL, PDFs e jobs não possuem recuperação validada. |
-| P1-2 | CI de regressão e segurança multi-OM | Qualidade | L | Sem gate, os P0 podem retornar. |
-| P1-3 | Monitoramento de fila, fontes, e-mail e armazenamento | Observabilidade | L | Health atual não verifica o pipeline real. |
-| P1-4 | Perfis Docker de produção endurecidos | Infra | L | Redis, portas, restart, recursos e imagens precisam de política. |
-| P1-5 | Reescrever runbooks e documentação vigente | Documentação | M | Docs descrevem Livewire 4/Horizon e componentes inexistentes. |
-| P1-6 | Ciclo de vida de contas e auditoria | Identidade | M | Falta desativação, revogação de sessões, MFA/SSO e trilha administrativa. |
+| P1-2 | CI de regressão dos seis P0 | Qualidade | M | Evita retorno dos bloqueadores já corrigidos. |
+| P1-3 | Monitoramento prático do pipeline | Observabilidade | M | Alertar falha de fila, fonte, e-mail, disco e backup, sem criar uma plataforma paralela. |
+| P1-4 | Perfil Docker de produção | Infra | M | Definir exposição de portas, reinício, recursos e permissões conforme a rede da OM. |
+| P1-5 | Runbooks e documentação vigente | Documentação | M | Instalação, atualização, backup/restore e incidentes precisam refletir o software real. |
+| P1-6 | Ciclo de vida de contas e auditoria | Identidade | M | Desativação, revogação de sessões e trilha administrativa; MFA/SSO apenas se a política da OM exigir. |
 
 ## P2 — evolução
 
@@ -41,10 +37,7 @@ O sistema deve permanecer em desenvolvimento com dados sintéticos até concluir
 
 ## Ganhos rápidos
 
-- Bloquear login/operação de não-admin sem `unidade_id`.
-- Aplicar `authorize()`/escopo por unidade em todas as actions com `ocorrenciaId`.
-- Desabilitar links públicos de BCA até existir download autorizado.
 - Usar `force="true"` no phpunit e bloquear testes fora de `testing`.
-- Definir `retry_after` acima do maior timeout.
-- Parar de imprimir senha e fixar temporariamente o instalador em commit conhecido.
-- Adicionar Unidade ao CSV, validar existência e importar em transação.
+- Corrigir `MAIL_MAILER` no shell e não escrever URLs BCA vazias no `.env`.
+- Transportar a supressão de e-mail da reanálise para os jobs enfileirados.
+- Bloquear criação/seleção de uma segunda OM na instalação.

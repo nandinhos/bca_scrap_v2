@@ -41,56 +41,59 @@ class BcaAnalysisService
         $count = 0;
         $keywordsEncontradas = [];
 
-        // 1. Search efetivos with chunking for better performance
+        // 1. Search efetivos (lazyById + foreach - nao revisita linhas recem-criadas,
+        // e propaga $count por referencia de forma confiavel)
         // Filter: ativo, not oculto, AND belongs to an active unidade
         $unidadesAtivas = Unidade::ativa()->pluck('id');
-        Efetivo::ativo()
+        $efetivosQuery = Efetivo::ativo()
             ->where(function ($q) use ($unidadesAtivas) {
                 $q->whereHas('unidade', fn ($q2) => $q2->whereIn('id', $unidadesAtivas))
                   ->orWhereDoesntHave('unidade');
-            })
-            ->chunkById(100, function ($efetivos) use ($textoBca, $bca, &$count) {
-                foreach ($efetivos as $efetivo) {
-                    $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
+            });
+        foreach ($efetivosQuery->lazyById(100, 'id') as $efetivo) {
+            $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);
 
-                    if ($matchedTerm) {
-                        $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
+            if ($matchedTerm) {
+                $snippet = $this->gerarSnippet($efetivo, $textoBca, $matchedTerm);
 
-                        $textoMaiusc = strtoupper($textoBca);
-                        $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
-                                     mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
-                        $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
+                $textoMaiusc = strtoupper($textoBca);
+                $countSaram = mb_substr_count($textoMaiusc, strtoupper($efetivo->saram)) +
+                             mb_substr_count($textoMaiusc, strtoupper($efetivo->getSaramHifenado()));
+                $countNome = mb_substr_count($textoMaiusc, strtoupper($efetivo->nome_completo));
 
-                        $quantidade = max($countSaram, $countNome);
-                        if ($quantidade === 0) {
-                            $quantidade = 1;
-                        }
+                $quantidade = max($countSaram, $countNome);
+                if ($quantidade === 0) {
+                    $quantidade = 1;
+                }
 
-                        $tipoMatch = 'NOME';
+                $tipoMatch = 'NOME';
 
-                        if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
-                            $tipoMatch = 'SARAM';
-                            if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
-                                $tipoMatch = 'SARAM + NOME';
-                            }
-                        }
-
-                        $ocorrencia = BcaOcorrencia::updateOrCreate(
-                            ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
-                            ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
-                        );
-
-                        if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
-                            if ($ocorrencia->wasRecentlyCreated) {
-                                $count++;
-                            }
-                            if (config('bca.suppress_emails') !== true) {
-                                event(new MilitarEncontradoEvent($ocorrencia));
-                            }
-                        }
+                if ($matchedTerm === $efetivo->saram || $matchedTerm === $efetivo->getSaramHifenado()) {
+                    $tipoMatch = 'SARAM';
+                    if (mb_stripos($textoBca, $efetivo->nome_completo) !== false) {
+                        $tipoMatch = 'SARAM + NOME';
                     }
                 }
-            });
+
+                $ocorrencia = BcaOcorrencia::updateOrCreate(
+                    ['bca_id' => $bca->id, 'efetivo_id' => $efetivo->id],
+                    ['snippet' => $snippet, 'tipo_match' => $tipoMatch, 'quantidade' => $quantidade]
+                );
+
+                // Defesa em profundidade: pula se ja enviado (impede reenvio em re-analise)
+                if ($ocorrencia->foiEnviado()) {
+                    continue;
+                }
+
+                // Conta como "novo" se foi criado nesta execucao OU se existe mas nunca foi enviado
+                if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
+                    $count++;
+                }
+                if (config('bca.suppress_emails') !== true) {
+                    event(new MilitarEncontradoEvent($ocorrencia));
+                }
+            }
+        }
 
         // 2. Search keywords (either provided or active in DB)
         $keywords = ! empty($keywordsToSearch)

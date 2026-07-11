@@ -11,31 +11,39 @@ use Illuminate\Support\Facades\Cache;
 class ReanalisarBcasCommand extends Command
 {
     protected $signature = 'bca:reanalisar
-                            {--de=            : Data de início do intervalo (Y-m-d). Omitir para todos.}
-                            {--ate=2026-04-29 : Data fim do intervalo (inclusive, Y-m-d)}
-                            {--redownload     : Reset completo + re-download do PDF (ignora texto_completo armazenado)}';
+                            {--de=            : Data de inicio do intervalo (Y-m-d). Omitir para todos.}
+                            {--ate=            : Data fim do intervalo (inclusive, Y-m-d). Default: hoje.}
+                            {--redownload     : Reset completo + re-download do PDF (ignora texto_completo armazenado)}
+                            {--force          : Em prod, pula confirmacao interativa}';
 
-    protected $description = 'Re-analisa BCAs processados em um intervalo de datas, limpando ocorrências antigas e re-executando a análise.';
+    protected $description = 'Re-analisa BCAs processados em um intervalo de datas, limpando ocorrencias antigas e re-executando a analise.';
 
     public function handle(BcaAnalysisService $service): int
     {
-        $ate = $this->option('ate');
+        $ate = $this->option('ate') ?: now()->format('Y-m-d');
         $de = $this->option('de');
         $redownload = $this->option('redownload');
 
+        // Guard prod: exigir --force ou rodar em dev
+        if (app()->environment('production') && ! $this->option('force') && ! $this->confirm("Re-analisar BCAs em PRODUCAO ate {$ate}? Isso deleta ocorrencias existentes.", false)) {
+            $this->error('Cancelado. Use --force em prod para pular a confirmacao.');
+
+            return self::FAILURE;
+        }
+
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $ate)) {
-            $this->error("Data inválida (--ate): {$ate}. Use o formato Y-m-d.");
+            $this->error("Data invalida (--ate): {$ate}. Use o formato Y-m-d.");
 
             return self::FAILURE;
         }
 
         if ($de !== null && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $de)) {
-            $this->error("Data inválida (--de): {$de}. Use o formato Y-m-d.");
+            $this->error("Data invalida (--de): {$de}. Use o formato Y-m-d.");
 
             return self::FAILURE;
         }
 
-        // Emails são sempre suprimidos neste comando
+        // Emails sao sempre suprimidos neste comando
         config(['bca.suppress_emails' => true]);
 
         $query = Bca::whereNotNull('analisado_em')->orderBy('data');
@@ -47,19 +55,18 @@ class ReanalisarBcasCommand extends Command
         if ($de) {
             $query->where('data', '>=', $de);
         }
-
         $query->where('data', '<=', $ate);
 
         $bcas = $query->get();
 
         if ($bcas->isEmpty()) {
-            $this->info('Nenhum BCA encontrado para o intervalo especificado.');
+            $this->info("Nenhum BCA encontrado para o intervalo especificado.");
 
             return self::SUCCESS;
         }
 
-        $intervalo = $de ? "de {$de} até {$ate}" : "até {$ate}";
-        $this->info("Encontrados {$bcas->count()} BCA(s) para re-análise ({$intervalo}).");
+        $intervalo = $de ? "de {$de} ate {$ate}" : "ate {$ate}";
+        $this->info("Encontrados {$bcas->count()} BCA(s) para re-analise ({$intervalo}).");
         $this->newLine();
 
         $totalEncontrados = 0;
@@ -67,7 +74,7 @@ class ReanalisarBcasCommand extends Command
         foreach ($bcas as $bca) {
             $dataStr = $bca->data->format('Y-m-d');
 
-            // 1. Limpar ocorrências anteriores
+            // 1. Limpar ocorrencias anteriores
             $deletados = $bca->ocorrencias()->delete();
 
             // 2. Limpar cache Redis
@@ -76,31 +83,31 @@ class ReanalisarBcasCommand extends Command
             Cache::forget("bca:analise:{$dataStr}");
 
             if ($redownload) {
-                // 3a. Reset completo: apagar texto e timestamps
+                // 3a. Reset completo
                 $bca->update([
-                    'url'                  => null,
-                    'texto_completo'       => null,
-                    'processado_em'        => null,
-                    'analisado_em'         => null,
+                    'url' => null,
+                    'texto_completo' => null,
+                    'processado_em' => null,
+                    'analisado_em' => null,
                     'keywords_encontradas' => null,
                 ]);
 
-                // 4a. Despachar pipeline completo com supressão de email
+                // 4a. Despachar pipeline completo
                 config(['bca.suppress_emails' => true]);
                 BaixarBcaJob::dispatch($dataStr, []);
 
-                $this->line("BCA {$dataStr}: reset completo — BaixarBcaJob despachado  [{$deletados} ocorrência(s) removidas]");
+                $this->line("BCA {$dataStr}: reset completo - BaixarBcaJob despachado  [{$deletados} ocorrencia(s) removidas]");
             } else {
-                // 3b. Reset apenas análise
+                // 3b. Reset apenas analise
                 $bca->update(['analisado_em' => null, 'keywords_encontradas' => null]);
                 config(['bca.suppress_emails' => true]);
 
                 // 4b. Re-analisar com texto armazenado
-                $count = $service->analisar($bca, 'manual');
+                $count = $service->analisar($bca, 'manual', []);
                 $totalEncontrados += $count;
 
                 $this->line(sprintf(
-                    'BCA %s: %d militar(es) encontrado(s)  [%d ocorrência(s) removidas]',
+                    'BCA %s: %d militar(es) encontrado(s)  [%d ocorrencia(s) removidas]',
                     $dataStr,
                     $count,
                     $deletados
@@ -114,8 +121,8 @@ class ReanalisarBcasCommand extends Command
             $this->info("{$bcas->count()} job(s) despachado(s). Acompanhe: docker compose exec php php artisan queue:work");
             $this->warn('Emails suprimidos. Envie manualmente pela interface BuscaBca.');
         } else {
-            $this->info("Re-análise concluída. Total: {$totalEncontrados} militar(es) encontrado(s) em {$bcas->count()} BCA(s).");
-            $this->warn('Emails suprimidos. Use a interface BuscaBca para enviar notificações manualmente.');
+            $this->info("Re-analise concluida. Total: {$totalEncontrados} militar(es) encontrado(s) em {$bcas->count()} BCA(s).");
+            $this->warn('Emails suprimidos. Use a interface BuscaBca para enviar notificacoes manualmente.');
         }
 
         return self::SUCCESS;

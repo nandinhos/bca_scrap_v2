@@ -51,8 +51,8 @@ tr:last-child td{border-bottom:none}
                 </tbody>
             </table>
         </div>
-        @if($bca->url)
-        <a href="{{ $bca->url }}" class="btn">Ver BCA completo →</a>
+        @if($bcaDownloadUrl ?? null)
+        <a href="{{ $bcaDownloadUrl }}" class="btn">Ver BCA completo →</a>
         @endif
     </div>
     <div class="ft">Email automático — {{ config('app.name', 'BCA Scrap') }} · FAB</div>

@@ -75,11 +75,17 @@ prompt() {
         eval "$var_name=\"$default_value\""
         return 0
     fi
-    local input
+    # O script pode ser recebido pelo stdin (`curl | bash`); nesse caso,
+    # os valores interativos devem continuar vindo do terminal.
+    local input=""
     if $is_secret; then
-        read -rs -p "$prompt_text${default_value:+ [$default_value]}: " input
+        if ! read -rs -p "$prompt_text${default_value:+ [$default_value]}: " input < /dev/tty; then
+            fatal "Não foi possível ler $var_name do terminal. Use --non-interactive com BCA_$var_name definido."
+        fi
     else
-        read -r -p "$prompt_text${default_value:+ [$default_value]}: " input
+        if ! read -r -p "$prompt_text${default_value:+ [$default_value]}: " input < /dev/tty; then
+            fatal "Não foi possível ler $var_name do terminal. Use --non-interactive com BCA_$var_name definido."
+        fi
     fi
     echo
     eval "$var_name=\"${input:-$default_value}\""

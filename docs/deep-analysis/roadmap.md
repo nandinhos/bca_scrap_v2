@@ -25,6 +25,15 @@ O sistema deve permanecer em desenvolvimento com dados sintéticos até concluir
 | P1-4 | Perfil Docker de produção | Infra | M | Definir exposição de portas, reinício, recursos e permissões conforme a rede da OM. |
 | P1-5 | Runbooks e documentação vigente | Documentação | M | Instalação, atualização, backup/restore e incidentes precisam refletir o software real. |
 | P1-6 | Ciclo de vida de contas e auditoria | Identidade | M | Desativação, revogação de sessões e trilha administrativa; MFA/SSO apenas se a política da OM exigir. |
+| P1-7 | Configuração gráfica de e-mail e SAD | Operação/UX | M | Permitir ao administrador configurar SMTP, remetente, destinatário da SAD e regras de envio sem editar o `.env`. |
+
+### Critérios para P1-7
+
+- Restringir o menu a administradores e registrar alterações em auditoria.
+- Mascarar a senha SMTP, armazená-la cifrada e nunca devolvê-la integralmente à interface.
+- Permitir testar a conexão e enviar uma mensagem de teste antes de ativar o SMTP.
+- Configurar e validar o e-mail da SAD, remetente, ativação dos envios e regras de compilado.
+- Aplicar mudanças com segurança à fila e à configuração, sem exigir comandos manuais no servidor.
 
 ## P2 — evolução
 

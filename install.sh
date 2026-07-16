@@ -59,25 +59,14 @@ ok()     { echo -e "${GREEN}[OK]${NC} $1"; }
 warn()   { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()    { echo -e "${RED}[ERRO]${NC} $1" >&2; }
 fatal()  { err "$1"; exit 1; }
-terminal_link() {
-    local url="$1" label="${2:-$1}"
-
-    # OSC 8 cria hyperlinks em terminais compatíveis, sem prejudicar os
-    # demais: todos ainda recebem uma URL completa para copiar e abrir.
-    if [[ -t 1 && "${TERM:-dumb}" != "dumb" ]]; then
-        printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$url" "$label"
-    else
-        printf '%s' "$label"
-    fi
-}
 installation_banner() {
     local title="$1"
-    local left_padding=$(( (60 - ${#title}) / 2 ))
-    local right_padding=$(( 60 - left_padding - ${#title} ))
+    local left_padding=$(( (62 - ${#title}) / 2 ))
+    local right_padding=$(( 62 - left_padding - ${#title} ))
 
-    printf '\n%b╔══════════════════════════════════════════════════════════════╗%b\n' "$GREEN" "$NC"
-    printf '%b║%*s%s%*s║%b\n' "$GREEN" "$left_padding" "" "$title" "$right_padding" "" "$NC"
-    printf '%b╚══════════════════════════════════════════════════════════════╝%b\n' "$GREEN" "$NC"
+    printf '\n╔══════════════════════════════════════════════════════════════╗\n'
+    printf '║%*s%s%*s║\n' "$left_padding" "" "$title" "$right_padding" ""
+    printf '╚══════════════════════════════════════════════════════════════╝\n'
 }
 read_env_value() {
     local env_file="$1" key="$2" line value=""
@@ -526,23 +515,23 @@ installation_banner "$INSTALLATION_STATUS"
 
 cat << EOF
 
-  ${BLUE}Acesso:${NC}
+  Acesso:
     ${ACCESS_MESSAGE}
-    URL:          $(terminal_link "$APP_URL")
+    URL:          ${APP_URL}
     Email:        ${ADMIN_EMAIL}
     Senha:        ${ADMIN_PASSWORD}
 
-  ${BLUE}Estrutura:${NC}
+  Estrutura:
     Diretório:    $(pwd)
     OM cadastrada: ${OM_NAME} (${OM_SIGLA})
 
-  ${BLUE}Comandos úteis:${NC}
+  Comandos úteis:
     cd $(pwd)
     docker compose ps              # Ver status dos containers
     docker compose logs -f php     # Logs do PHP
     docker compose exec php bash   # Shell dentro do container
 
-  ${BLUE}Próximos passos:${NC}
+  Próximos passos:
     1. Acesse http://localhost:${HTTP_PORT}
     2. Faça login com as credenciais acima
     3. Cadastre o efetivo da sua OM em /efetivo (ou importar CSV)
@@ -550,7 +539,7 @@ cat << EOF
     5. Edite BCA_SAD_EMAIL em .env com o e-mail da SAD da sua OM
     6. Se usar fontes BCA diferentes, sobrescreva BCA_BASE_URL e BCA_ICEA_URL
 
-  ${YELLOW}IMPORTANTE:${NC}
+  IMPORTANTE:
     - Salve a senha do admin em local seguro
     - As credenciais do banco estão em .env (não commitar)
     - Para produção, use HTTPS (configure um proxy reverso)

@@ -43,6 +43,8 @@ INSTALL_DIR="${BCA_INSTALL_DIR:-./bca_scrap_v2}"
 HTTP_PORT="${BCA_HTTP_PORT:-18080}"
 SKIP_PREREQ="${BCA_SKIP_PREREQ:-false}"
 NON_INTERACTIVE=false
+REUSING_EXISTING=false
+COMPOSE_PROJECT_NAME="${BCA_COMPOSE_PROJECT_NAME:-$(basename "$INSTALL_DIR")}"
 
 # Detectar modo
 [[ "${1:-}" == "--non-interactive" || "${1:-}" == "-y" ]] && NON_INTERACTIVE=true
@@ -113,7 +115,26 @@ DB_DATABASE DB_DATABASE
 DB_USERNAME DB_USERNAME
 DB_PASSWORD DB_PASSWORD
 APP_KEY APP_KEY
+COMPOSE_PROJECT_NAME COMPOSE_PROJECT_NAME
 EXISTING_CONFIG
+}
+wait_for_postgres() {
+    log "Aguardando PostgreSQL ficar pronto..."
+
+    for i in {1..30}; do
+        if docker compose exec -T --interactive=false postgres pg_isready -U "$DB_USERNAME" -d "$DB_DATABASE" >/dev/null 2>&1; then
+            ok "PostgreSQL pronto"
+            return 0
+        fi
+        sleep 1
+    done
+
+    fatal "PostgreSQL não ficou pronto em 30s"
+}
+database_credentials_valid() {
+    docker compose exec -T --interactive=false postgres sh -lc \
+        'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1"' \
+        >/dev/null 2>&1
 }
 prompt() {
     local var_name="$1" prompt_text="$2" default_value="${3:-}" is_secret="${4:-false}"
@@ -253,6 +274,7 @@ log "Clonando repositório em '$INSTALL_DIR'..."
 
 if [[ -d "$INSTALL_DIR" ]]; then
     if [[ -d "$INSTALL_DIR/.git" ]]; then
+        REUSING_EXISTING=true
         warn "Diretório $INSTALL_DIR já contém um repositório git."
         prompt USE_EXISTING "Reutilizar existente? (s/N)" "N"
         if [[ ! "$USE_EXISTING" =~ ^[sSyY]$ ]]; then
@@ -282,6 +304,8 @@ log "Gerando arquivo .env..."
 APP_KEY="${APP_KEY:-base64:$(openssl rand -base64 32)}"
 
 cat > .env << EOF
+COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+
 APP_NAME="BCA Scrap v2"
 APP_ENV=production
 APP_KEY=${APP_KEY}
@@ -335,6 +359,27 @@ EOF
 
 ok ".env gerado (DB: $DB_DATABASE, Admin: $ADMIN_EMAIL)"
 
+# Uma pasta removida não apaga os volumes Docker. Em uma instalação nova,
+# um pgdata antigo usaria a senha anterior e impediria a autenticação.
+PGDATA_VOLUME="${COMPOSE_PROJECT_NAME}_pgdata"
+if ! $REUSING_EXISTING && docker volume inspect "$PGDATA_VOLUME" >/dev/null 2>&1; then
+    warn "Foi encontrado um banco PostgreSQL de instalação anterior: $PGDATA_VOLUME"
+    warn "A senha desse volume pode ser diferente da nova configuração."
+    warn "A remoção abaixo apaga somente o banco antigo; arquivos BCA permanecem preservados."
+
+    prompt RESET_DATABASE "Remover o banco PostgreSQL antigo e continuar? (s/N)" "N"
+    if [[ ! "$RESET_DATABASE" =~ ^[sSyY]$ ]]; then
+        fatal "Instalação interrompida para preservar o banco existente."
+    fi
+
+    docker compose down --remove-orphans \
+        || fatal "Falha ao parar os containers da instalação anterior"
+    docker volume rm "$PGDATA_VOLUME" >/dev/null \
+        || fatal "Falha ao remover o volume $PGDATA_VOLUME"
+
+    ok "Banco PostgreSQL antigo removido; um volume novo será criado"
+fi
+
 # ============================================================
 # 6. Subir containers
 # ============================================================
@@ -346,18 +391,33 @@ docker compose up -d --build \
 ok "Containers em execução"
 
 # ============================================================
-# 7. Aguardar Postgres healthy
+# 7. Aguardar e validar PostgreSQL
 # ============================================================
-log "Aguardando PostgreSQL ficar pronto..."
+wait_for_postgres
 
-for i in {1..30}; do
-    if docker compose exec -T --interactive=false postgres pg_isready -U "$DB_USERNAME" -d "$DB_DATABASE" >/dev/null 2>&1; then
-        ok "PostgreSQL pronto"
-        break
+if ! database_credentials_valid; then
+    warn "O PostgreSQL está saudável, mas rejeitou a senha configurada."
+    warn "Isso normalmente indica um volume criado por uma instalação anterior."
+    warn "A recriação apaga somente o banco PostgreSQL; arquivos BCA permanecem preservados."
+
+    prompt RESET_DATABASE "Recriar o banco PostgreSQL e continuar? (s/N)" "N"
+    if [[ ! "$RESET_DATABASE" =~ ^[sSyY]$ ]]; then
+        fatal "Instalação interrompida para preservar o banco existente."
     fi
-    [[ $i -eq 30 ]] && fatal "PostgreSQL não ficou pronto em 30s"
-    sleep 1
-done
+
+    docker compose down --remove-orphans \
+        || fatal "Falha ao parar os containers para recriar o banco"
+    docker volume rm "$PGDATA_VOLUME" >/dev/null \
+        || fatal "Falha ao remover o volume $PGDATA_VOLUME"
+    docker compose up -d \
+        || fatal "Falha ao reiniciar os containers após recriar o banco"
+
+    wait_for_postgres
+    database_credentials_valid \
+        || fatal "O PostgreSQL continuou rejeitando as credenciais após recriar o banco"
+fi
+
+ok "Credenciais do PostgreSQL validadas"
 
 # ============================================================
 # 8. Aguardar PHP healthy

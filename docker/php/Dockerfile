@@ -4,6 +4,8 @@ FROM php:8.4-fpm-alpine
 RUN apk add --no-cache \
     git \
     curl \
+    nodejs \
+    npm \
     libpng-dev \
     libxml2-dev \
     zip \

@@ -217,6 +217,9 @@ if [[ -d "$INSTALL_DIR" ]]; then
         if [[ ! "$USE_EXISTING" =~ ^[sSyY]$ ]]; then
             fatal "Instalação abortada pelo usuário."
         fi
+        log "Atualizando repositório existente para origin/$REPO_BRANCH..."
+        git -C "$INSTALL_DIR" pull --ff-only origin "$REPO_BRANCH" \
+            || fatal "Não foi possível atualizar o repositório existente. Verifique alterações locais ou divergências."
     else
         fatal "Diretório $INSTALL_DIR já existe mas não é um repositório git."
     fi
@@ -330,7 +333,28 @@ for i in {1..60}; do
 done
 
 # ============================================================
-# 9. Migrations + Seed
+# 9. Dependências da aplicação
+# ============================================================
+log "Instalando dependências PHP..."
+
+docker compose exec -T --interactive=false php composer install \
+    --no-dev --no-interaction --prefer-dist --optimize-autoloader \
+    || fatal "Falha ao instalar dependências PHP"
+
+ok "Dependências PHP instaladas"
+
+log "Instalando e compilando assets do frontend..."
+
+docker compose exec -T --interactive=false php npm ci --no-audit --no-fund \
+    || fatal "Falha ao instalar dependências do frontend"
+
+docker compose exec -T --interactive=false php npm run build \
+    || fatal "Falha ao compilar assets do frontend"
+
+ok "Frontend compilado"
+
+# ============================================================
+# 10. Migrations + Seed
 # ============================================================
 log "Rodando migrations..."
 
@@ -345,7 +369,7 @@ docker compose exec -T --interactive=false php php artisan db:seed --force \
 ok "Banco configurado"
 
 # ============================================================
-# 9.5 Aviso sobre configuracao pendente
+# 10.5 Aviso sobre configuracao pendente
 # ============================================================
 if [[ -z "${SAD_EMAIL}" ]]; then
     warn "BCA_SAD_EMAIL esta vazio — compilado diario NAO sera enviado."
@@ -359,14 +383,14 @@ if [[ "$MAIL_MAILER" == "log" ]]; then
 fi
 
 # ============================================================
-# 10. Storage link
+# 11. Storage link
 # ============================================================
 log "Criando link simbólico de storage..."
 
 docker compose exec -T --interactive=false php php artisan storage:link --force >/dev/null 2>&1 || true
 
 # ============================================================
-# 11. Health check final
+# 12. Health check final
 # ============================================================
 log "Verificando saúde da aplicação..."
 
@@ -384,7 +408,7 @@ else
 fi
 
 # ============================================================
-# 12. Resumo
+# 13. Resumo
 # ============================================================
 if $APP_HEALTHY; then
     INSTALLATION_STATUS="INSTALAÇÃO CONCLUÍDA!"

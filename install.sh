@@ -307,7 +307,7 @@ ok "Containers em execução"
 log "Aguardando PostgreSQL ficar pronto..."
 
 for i in {1..30}; do
-    if docker compose exec -T postgres pg_isready -U "$DB_USERNAME" -d "$DB_DATABASE" >/dev/null 2>&1; then
+    if docker compose exec -T --interactive=false postgres pg_isready -U "$DB_USERNAME" -d "$DB_DATABASE" >/dev/null 2>&1; then
         ok "PostgreSQL pronto"
         break
     fi
@@ -321,7 +321,7 @@ done
 log "Aguardando PHP-FPM ficar pronto..."
 
 for i in {1..60}; do
-    if docker compose exec -T php php -r 'exit(0);' >/dev/null 2>&1; then
+    if docker compose exec -T --interactive=false php php -r 'exit(0);' >/dev/null 2>&1; then
         ok "PHP-FPM pronto"
         break
     fi
@@ -334,12 +334,12 @@ done
 # ============================================================
 log "Rodando migrations..."
 
-docker compose exec -T php php artisan migrate --force \
+docker compose exec -T --interactive=false php php artisan migrate --force \
     || fatal "Falha nas migrations"
 
 log "Rodando seeders (criando admin e unidades exemplo)..."
 
-docker compose exec -T php php artisan db:seed --force \
+docker compose exec -T --interactive=false php php artisan db:seed --force \
     || fatal "Falha nos seeders"
 
 ok "Banco configurado"
@@ -350,7 +350,7 @@ ok "Banco configurado"
 if [[ -z "${SAD_EMAIL}" ]]; then
     warn "BCA_SAD_EMAIL esta vazio — compilado diario NAO sera enviado."
     warn "Edite o .env e adicione: BCA_SAD_EMAIL=sua-sad@suaom.fab.mil.br"
-    warn "Depois reinicie: docker compose exec -T php php artisan config:clear && docker compose restart queue"
+    warn "Depois reinicie: docker compose exec -T --interactive=false php php artisan config:clear && docker compose restart queue"
 fi
 
 if [[ "$MAIL_MAILER" == "log" ]]; then
@@ -363,7 +363,7 @@ fi
 # ============================================================
 log "Criando link simbólico de storage..."
 
-docker compose exec -T php php artisan storage:link --force >/dev/null 2>&1 || true
+docker compose exec -T --interactive=false php php artisan storage:link --force >/dev/null 2>&1 || true
 
 # ============================================================
 # 11. Health check final

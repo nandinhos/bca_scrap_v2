@@ -56,6 +56,26 @@ ok()     { echo -e "${GREEN}[OK]${NC} $1"; }
 warn()   { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()    { echo -e "${RED}[ERRO]${NC} $1" >&2; }
 fatal()  { err "$1"; exit 1; }
+terminal_link() {
+    local url="$1" label="${2:-$1}"
+
+    # OSC 8 cria hyperlinks em terminais compatíveis, sem prejudicar os
+    # demais: todos ainda recebem uma URL completa para copiar e abrir.
+    if [[ -t 1 && "${TERM:-dumb}" != "dumb" ]]; then
+        printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$url" "$label"
+    else
+        printf '%s' "$label"
+    fi
+}
+installation_banner() {
+    local title="$1"
+    local left_padding=$(( (60 - ${#title}) / 2 ))
+    local right_padding=$(( 60 - left_padding - ${#title} ))
+
+    printf '\n%b╔══════════════════════════════════════════════════════════════╗%b\n' "$GREEN" "$NC"
+    printf '%b║%*s%s%*s║%b\n' "$GREEN" "$left_padding" "" "$title" "$right_padding" "" "$NC"
+    printf '%b╚══════════════════════════════════════════════════════════════╝%b\n' "$GREEN" "$NC"
+}
 prompt() {
     local var_name="$1" prompt_text="$2" default_value="${3:-}" is_secret="${4:-false}"
     # Primeiro tenta a versão com prefixo BCA_ (modo não-interativo)
@@ -351,9 +371,13 @@ docker compose exec -T php php artisan storage:link --force >/dev/null 2>&1 || t
 log "Verificando saúde da aplicação..."
 
 sleep 3
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${HTTP_PORT}/login" || echo "000")
+APP_URL="http://localhost:${HTTP_PORT}"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL/login" || true)
+HTTP_CODE="${HTTP_CODE:-000}"
+APP_HEALTHY=false
 
 if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "302" ]]; then
+    APP_HEALTHY=true
     ok "Aplicação respondendo (HTTP $HTTP_CODE)"
 else
     warn "Aplicação retornou HTTP $HTTP_CODE. Verifique os logs."
@@ -362,14 +386,21 @@ fi
 # ============================================================
 # 12. Resumo
 # ============================================================
+if $APP_HEALTHY; then
+    INSTALLATION_STATUS="INSTALAÇÃO CONCLUÍDA!"
+    ACCESS_MESSAGE="A aplicação está ativa e pronta para acesso:"
+else
+    INSTALLATION_STATUS="INSTALAÇÃO FINALIZADA COM AVISOS"
+    ACCESS_MESSAGE="A aplicação subiu, mas o health check ainda não respondeu:"
+fi
+
+installation_banner "$INSTALLATION_STATUS"
+
 cat << EOF
 
-${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}
-${GREEN}║                  INSTALAÇÃO CONCLUÍDA!                       ║${NC}
-${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}
-
   ${BLUE}Acesso:${NC}
-    URL:          http://localhost:${HTTP_PORT}
+    ${ACCESS_MESSAGE}
+    URL:          $(terminal_link "$APP_URL")
     Email:        ${ADMIN_EMAIL}
     Senha:        ${ADMIN_PASSWORD}
 

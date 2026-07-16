@@ -76,6 +76,45 @@ installation_banner() {
     printf '%b║%*s%s%*s║%b\n' "$GREEN" "$left_padding" "" "$title" "$right_padding" "" "$NC"
     printf '%b╚══════════════════════════════════════════════════════════════╝%b\n' "$GREEN" "$NC"
 }
+read_env_value() {
+    local env_file="$1" key="$2" line value=""
+
+    while IFS= read -r line; do
+        [[ "$line" == "$key="* ]] || continue
+        value="${line#*=}"
+        value="${value%$'\r'}"
+        if [[ "$value" == \"*\" && "$value" == *\" ]]; then
+            value="${value:1:${#value}-2}"
+        fi
+        break
+    done < "$env_file"
+
+    printf '%s' "$value"
+}
+load_existing_config() {
+    local env_file="$INSTALL_DIR/.env" var_name env_key value
+    [[ -f "$env_file" ]] || return 0
+
+    log "Configuração existente encontrada; preservando credenciais e dados da instalação."
+
+    while read -r var_name env_key; do
+        [[ -n "${!var_name:-}" ]] && continue
+        value="$(read_env_value "$env_file" "$env_key")"
+        [[ -n "$value" ]] && printf -v "$var_name" '%s' "$value"
+    done << 'EXISTING_CONFIG'
+OM_NAME OM_NAME
+OM_SIGLA OM_SIGLA
+OM_CODE OM_CODE
+ADMIN_NAME ADMIN_NAME
+ADMIN_EMAIL ADMIN_EMAIL
+ADMIN_PASSWORD ADMIN_PASSWORD
+SAD_EMAIL BCA_SAD_EMAIL
+DB_DATABASE DB_DATABASE
+DB_USERNAME DB_USERNAME
+DB_PASSWORD DB_PASSWORD
+APP_KEY APP_KEY
+EXISTING_CONFIG
+}
 prompt() {
     local var_name="$1" prompt_text="$2" default_value="${3:-}" is_secret="${4:-false}"
     # Primeiro tenta a versão com prefixo BCA_ (modo não-interativo)
@@ -177,6 +216,8 @@ fi
 # ============================================================
 # 3. Coletar inputs
 # ============================================================
+load_existing_config
+
 log "Coletando informações da OM..."
 
 prompt OM_NAME     "Nome da Organização Militar" "MINHA-OM"

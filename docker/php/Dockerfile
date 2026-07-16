@@ -41,8 +41,8 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=4000" >> /usr/local/etc/php/conf.d/opcache.ini \
     && echo "opcache.validate_timestamps=1" >> /usr/local/etc/php/conf.d/opcache.ini
 
-# Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+# Install the current Composer 2 release (compatible with PHP 8.4)
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html

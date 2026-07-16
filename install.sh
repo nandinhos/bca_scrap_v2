@@ -42,6 +42,7 @@ readonly COMPOSE_URL="${BCA_COMPOSE_URL:-https://raw.githubusercontent.com/nandi
 INSTALL_DIR="${BCA_INSTALL_DIR:-./bca_scrap_v2}"
 HTTP_PORT="${BCA_HTTP_PORT:-18080}"
 SKIP_PREREQ="${BCA_SKIP_PREREQ:-false}"
+MAIL_MAILER="${BCA_MAIL_MAILER:-}"
 NON_INTERACTIVE=false
 REUSING_EXISTING=false
 COMPOSE_PROJECT_NAME="${BCA_COMPOSE_PROJECT_NAME:-$(basename "$INSTALL_DIR")}"
@@ -116,6 +117,7 @@ DB_USERNAME DB_USERNAME
 DB_PASSWORD DB_PASSWORD
 APP_KEY APP_KEY
 COMPOSE_PROJECT_NAME COMPOSE_PROJECT_NAME
+MAIL_MAILER MAIL_MAILER
 EXISTING_CONFIG
 }
 wait_for_postgres() {
@@ -238,6 +240,7 @@ fi
 # 3. Coletar inputs
 # ============================================================
 load_existing_config
+MAIL_MAILER="${MAIL_MAILER:-log}"
 
 log "Coletando informações da OM..."
 
@@ -341,7 +344,7 @@ ADMIN_EMAIL="${ADMIN_EMAIL}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD}"
 
 # Mail (configurar depois)
-MAIL_MAILER=log
+MAIL_MAILER=${MAIL_MAILER}
 MAIL_FROM_ADDRESS="${ADMIN_EMAIL}"
 MAIL_FROM_NAME="\${APP_NAME}"
 

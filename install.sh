@@ -43,6 +43,8 @@ INSTALL_DIR="${BCA_INSTALL_DIR:-./bca_scrap_v2}"
 HTTP_PORT="${BCA_HTTP_PORT:-18080}"
 SKIP_PREREQ="${BCA_SKIP_PREREQ:-false}"
 MAIL_MAILER="${BCA_MAIL_MAILER:-}"
+BCA_BASE_URL="${BCA_BASE_URL:-}"
+BCA_ICEA_URL="${BCA_ICEA_URL:-}"
 NON_INTERACTIVE=false
 REUSING_EXISTING=false
 COMPOSE_PROJECT_NAME="${BCA_COMPOSE_PROJECT_NAME:-$(basename "$INSTALL_DIR")}"
@@ -107,6 +109,8 @@ DB_PASSWORD DB_PASSWORD
 APP_KEY APP_KEY
 COMPOSE_PROJECT_NAME COMPOSE_PROJECT_NAME
 MAIL_MAILER MAIL_MAILER
+BCA_BASE_URL BCA_BASE_URL
+BCA_ICEA_URL BCA_ICEA_URL
 EXISTING_CONFIG
 }
 wait_for_postgres() {
@@ -230,6 +234,8 @@ fi
 # ============================================================
 load_existing_config
 MAIL_MAILER="${MAIL_MAILER:-log}"
+BCA_BASE_URL="${BCA_BASE_URL:-http://www.cendoc.intraer/sisbca/consulta_bca/}"
+BCA_ICEA_URL="${BCA_ICEA_URL:-http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/}"
 
 log "Coletando informações da OM..."
 
@@ -337,9 +343,9 @@ MAIL_MAILER=${MAIL_MAILER}
 MAIL_FROM_ADDRESS="${ADMIN_EMAIL}"
 MAIL_FROM_NAME="\${APP_NAME}"
 
-# BCA Source (deixe vazio para usar defaults CENDOC/ICEA)
-BCA_BASE_URL=
-BCA_ICEA_URL=
+# Fontes BCA da intranet (podem ser substituídas no .env)
+BCA_BASE_URL=${BCA_BASE_URL}
+BCA_ICEA_URL=${BCA_ICEA_URL}
 
 # SAD — e-mail da secretaria que recebe o compilado diario.
 # Se vazio, o compilado NAO sera enviado (apenas e-mails individuais).

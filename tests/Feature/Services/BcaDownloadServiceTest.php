@@ -36,6 +36,28 @@ it('returns storage path when BCA is found via cache url', function () {
     Storage::disk('public')->assertExists('bcas/2026-03-14.pdf');
 });
 
+it('throws when the PDF cannot be persisted', function () {
+    Cache::put('bca:query:2026-03-14', 'http://fake-url.mil.br/bca.pdf', now()->addHours(24));
+
+    Http::fake([
+        'http://fake-url.mil.br/bca.pdf' => Http::response(
+            '%PDF-1.4 '.str_repeat('x', 1000),
+            200,
+            ['Content-Type' => 'application/pdf']
+        ),
+    ]);
+
+    $disk = Mockery::mock();
+    $disk->shouldReceive('put')
+        ->once()
+        ->with('bcas/2026-03-14.pdf', Mockery::type('string'))
+        ->andReturnFalse();
+    Storage::shouldReceive('disk')->once()->with('public')->andReturn($disk);
+
+    expect(fn () => app(BcaDownloadService::class)->baixarBca('2026-03-14'))
+        ->toThrow(RuntimeException::class, 'Não foi possível gravar o PDF');
+});
+
 it('caches nao_encontrado when BCA is not found', function () {
     Http::fake(Http::response('not found', 404));
 

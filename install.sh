@@ -482,11 +482,34 @@ if [[ "$MAIL_MAILER" == "log" ]]; then
 fi
 
 # ============================================================
-# 11. Storage link
+# 11. Permissões e link do storage
 # ============================================================
-log "Criando link simbólico de storage..."
+log "Validando permissões e link simbólico do storage..."
 
-docker compose exec -T --interactive=false php php artisan storage:link --force >/dev/null 2>&1 || true
+docker compose exec -T --interactive=false php php -r '
+$directory = "/var/www/html/storage/app/public/bcas";
+$link = "/var/www/html/public/storage";
+$expectedTarget = "../storage/app/public";
+
+if (!is_dir($directory) || !is_writable($directory)) {
+    fwrite(STDERR, "Diretório de BCAs inexistente ou sem permissão de escrita: {$directory}\n");
+    exit(1);
+}
+
+$probe = $directory."/.bca-write-test-".getmypid();
+if (file_put_contents($probe, "ok") !== 2 || !is_file($probe)) {
+    fwrite(STDERR, "Falha no teste de escrita em {$directory}\n");
+    exit(1);
+}
+unlink($probe);
+
+if (!is_link($link) || readlink($link) !== $expectedTarget || !is_dir($link)) {
+    fwrite(STDERR, "Link simbólico inválido: {$link}\n");
+    exit(1);
+}
+' || fatal "Storage sem permissão de escrita ou link simbólico inválido"
+
+ok "Storage gravável e link simbólico válido"
 
 # ============================================================
 # 12. Health check final

@@ -1,4 +1,14 @@
 services:
+  storage-init:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["/bin/sh", "/opt/bca/init-storage.sh"]
+    volumes:
+      - .:/var/www/html
+      - ./docker/storage/init-storage.sh:/opt/bca/init-storage.sh:ro
+      - bcas_storage:/var/www/html/storage/app/public/bcas
+    restart: "no"
+
   nginx:
     image: nginx:1.25-alpine
     ports:
@@ -21,6 +31,8 @@ services:
       - .:/var/www/html
       - bcas_storage:/var/www/html/storage/app/public/bcas
     depends_on:
+      storage-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -63,6 +75,7 @@ services:
     command: php artisan schedule:work
     volumes:
       - .:/var/www/html
+      - bcas_storage:/var/www/html/storage/app/public/bcas
     depends_on:
       php:
         condition: service_healthy

@@ -185,30 +185,51 @@ class BcaDownloadService
     {
         try {
             $response = Http::timeout(60)->get($url);
-
-            if (! $response->successful() || strlen($response->body()) < 1000) {
-                return null;
-            }
-
-            $body = $response->body();
-            $maxBytes = $this->maxPdfSizeMb * 1024 * 1024;
-
-            if (strlen($body) > $maxBytes) {
-                Log::warning("BCA [{$data}]: PDF too large (".strlen($body).' bytes)');
-
-                return null;
-            }
-
-            $path = "bcas/{$data}.pdf";
-            Storage::disk('public')->put($path, $body);
-
-            Cache::put("bca:url:{$data}", $url, now()->addDays(30));
-
-            return $path;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("BCA [{$data}]: download failed — ".$e->getMessage());
 
             return null;
         }
+
+        if (! $response->successful() || strlen($response->body()) < 1000) {
+            return null;
+        }
+
+        $body = $response->body();
+        $maxBytes = $this->maxPdfSizeMb * 1024 * 1024;
+
+        if (strlen($body) > $maxBytes) {
+            Log::warning("BCA [{$data}]: PDF too large (".strlen($body).' bytes)');
+
+            return null;
+        }
+
+        $path = "bcas/{$data}.pdf";
+        $disk = Storage::disk('public');
+
+        try {
+            if (! $disk->put($path, $body) || ! $disk->exists($path)) {
+                throw new \RuntimeException('o filesystem não confirmou a gravação');
+            }
+
+            $storedBytes = $disk->size($path);
+            if ($storedBytes !== strlen($body)) {
+                $disk->delete($path);
+                throw new \RuntimeException(
+                    'tamanho gravado divergente: esperado '.strlen($body).", obtido {$storedBytes}"
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::error("BCA [{$data}]: storage write failed for {$path} — ".$e->getMessage());
+
+            throw new \RuntimeException(
+                "Não foi possível gravar o PDF do BCA {$data} em {$path}",
+                previous: $e
+            );
+        }
+
+        Cache::put("bca:url:{$data}", $url, now()->addDays(30));
+
+        return $path;
     }
 }

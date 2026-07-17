@@ -72,7 +72,7 @@ Edite o `.env` e preencha:
 ```dotenv
 APP_NAME="BCA Scrap - MINHA OM"
 APP_URL=http://localhost:18080
-APP_KEY=                    # Será gerado automaticamente
+APP_KEY=base64:<<INSIRA_32_BYTES_EM_BASE64>>
 
 # Banco de dados
 DB_DATABASE=bca_db
@@ -83,30 +83,49 @@ DB_PASSWORD=<<INSIRA_SUA_SENHA_POSTGRES>>  # Gerar uma senha forte (ex: openssl 
 ADMIN_NAME=Administrador
 ADMIN_EMAIL=<<INSIRA_SEU_EMAIL_ADMIN>>
 ADMIN_PASSWORD=<<INSIRA_SUA_SENHA_ADMIN>>  # Senha forte (mín. 8 chars)
+
+# Fontes corporativas do BCA
+BCA_BASE_URL=http://www.cendoc.intraer/sisbca/consulta_bca/
+BCA_ICEA_URL=http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/
 ```
+
+Para gerar `APP_KEY`, execute `openssl rand -base64 32` e prefixe o resultado com `base64:`.
 
 ### 4. Subir containers
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build postgres redis storage-init php
 ```
 
-Aguarde todos os containers ficarem `healthy` (entre 1-3 minutos na primeira vez).
+Aguarde PostgreSQL, Redis e PHP ficarem `healthy`. O serviço `storage-init` deve terminar com status `Exited (0)`; isso é esperado.
 
-### 5. Rodar migrations e seeders
+### 5. Instalar dependências e compilar a aplicação
+
+```bash
+docker compose exec -T php composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+docker compose exec -T php npm ci --no-audit --no-fund
+docker compose exec -T php npm run build
+```
+
+### 6. Rodar migrations, seeders e demais serviços
 
 ```bash
 docker compose exec -T php php artisan migrate --force
 docker compose exec -T php php artisan db:seed --force
+docker compose up -d
 ```
 
-### 6. Criar link de storage
+### 7. Validar storage
 
 ```bash
-docker compose exec -T php php artisan storage:link
+docker compose logs storage-init
+docker compose exec -T queue php -r 'var_export(is_writable("/var/www/html/storage/app/public/bcas")); echo PHP_EOL;'
+readlink public/storage
 ```
 
-### 7. Acessar
+O resultado esperado é `true` e o link deve apontar para `../storage/app/public`. Não execute `storage:link` sem a opção `--relative`, pois o projeto usa um symlink relativo válido no host e nos contêineres.
+
+### 8. Acessar
 
 Abra `http://localhost:18080` no navegador. Faça login com `ADMIN_EMAIL` e `ADMIN_PASSWORD`.
 
@@ -137,7 +156,7 @@ O instalador vai:
 |----------|---------|-----------|
 | `BCA_OM_NAME` | — | Nome da OM (obrigatório) |
 | `BCA_OM_SIGLA` | = OM_NAME | Sigla curta (ex: OMA) |
-| `BCA_OM_CODIGO` | gerado | Código ICAO/SISCOMEX |
+| `BCA_OM_CODE` | gerado | Código ICAO/SISCOMEX |
 | `BCA_ADMIN_NAME` | "Administrador" | Nome do admin |
 | `BCA_ADMIN_EMAIL` | — | Email do admin (obrigatório) |
 | `BCA_ADMIN_PASSWORD` | gerado | Senha (mín. 8 chars) |
@@ -145,6 +164,8 @@ O instalador vai:
 | `BCA_HTTP_PORT` | 18080 | Porta do nginx |
 | `BCA_INSTALL_DIR` | ./bca_scrap_v2 | Onde instalar |
 | `BCA_SKIP_PREREQ` | false | Pular checagem de pré-requisitos |
+| `BCA_BASE_URL` | CENDOC | Fonte principal do BCA |
+| `BCA_ICEA_URL` | ICEA | Fonte alternativa do BCA |
 
 ---
 
@@ -189,14 +210,21 @@ docker compose restart queue
 
 ### Configurar URL do BCA (opcional)
 
-As URLs das fontes do BCA ja vem com defaults genericos (CENDOC/ICEA) no `.env.example`. Se sua OM usa endpoints diferentes, sobrescreva:
+As URLs corporativas CENDOC/ICEA são gravadas no `.env` pelo instalador. Se sua OM usa endpoints diferentes, sobrescreva:
 
 ```dotenv
 BCA_BASE_URL=http://www.cendoc.intraer/sisbca/consulta_bca/
 BCA_ICEA_URL=http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/
 ```
 
-O sistema vai baixar e processar automaticamente nos horarios agendados.
+Após qualquer alteração no `.env`, recrie os serviços que consomem essas variáveis:
+
+```bash
+docker compose up -d --force-recreate php queue scheduler
+docker compose exec -T php php artisan config:clear
+```
+
+O sistema vai baixar e processar automaticamente nos horários agendados.
 
 ---
 
@@ -238,9 +266,12 @@ Cada instalação do BCA Scrap é **isolada por OM**:
 ```bash
 cd bca_scrap_v2
 git pull origin main
-docker compose down
 docker compose up -d --build
+docker compose exec -T php composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+docker compose exec -T php npm ci --no-audit --no-fund
+docker compose exec -T php npm run build
 docker compose exec -T php php artisan migrate --force
+docker compose exec -T php php artisan config:clear
 ```
 
 ---
@@ -258,8 +289,24 @@ Procure por erros de porta, permissão, ou falta de memória. Mínimo recomendad
 ### "Permission denied" em storage
 
 ```bash
-docker compose exec -T php chmod -R 775 storage bootstrap/cache
+docker compose run --rm storage-init
+docker compose up -d
+docker compose exec -T queue php -r 'var_export(is_writable("/var/www/html/storage/app/public/bcas")); echo PHP_EOL;'
 ```
+
+Não use `chown` dentro de `php` ou `queue`: esses serviços executam sem privilégios. O `storage-init` é o único responsável por ajustar o volume para UID/GID `1000:1000`.
+
+### PDF encontrado, mas processamento falha
+
+Consulte o erro real:
+
+```bash
+docker compose logs --tail=200 queue
+tail -n 200 storage/logs/laravel.log
+docker compose exec -T php php artisan queue:failed
+```
+
+Se houver `PDF file not found`, execute a correção de storage acima e repita a busca. A gravação agora é verificada; uma falha de filesystem faz o job falhar explicitamente em vez de registrar “BCA não encontrado”.
 
 ### Esqueci a senha do admin
 

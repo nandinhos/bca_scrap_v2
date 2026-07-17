@@ -46,6 +46,8 @@ Toda a configuração vive no arquivo `.env` (copie de `.env.example`). O instal
 | `BCA_SEARCH_RETRY` | `2` | Não | Tentativas em caso de falha. |
 | `BCA_MAX_PDF_SIZE_MB` | `50` | Não | Tamanho máximo do PDF do BCA. |
 
+Se `BCA_BASE_URL` ou `BCA_ICEA_URL` estiver presente, porém vazio, a aplicação também usa o default correspondente de `config/bca.php`.
+
 ### E-mail (SMTP)
 
 | Variável | Default | Descrição |
@@ -68,6 +70,21 @@ Toda a configuração vive no arquivo `.env` (copie de `.env.example`). O instal
 | `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | `bca_db` / `bca_user` / — | Credenciais. |
 | `REDIS_HOST` | `redis` | Cache e filas. |
 | `BCA_HTTP_PORT` | `18080` | Porta HTTP do nginx (usada pelo `install.sh`). |
+
+### Aplicar alterações do `.env` no Docker
+
+`docker compose restart` não recria o ambiente do contêiner. Depois de mudar URLs, banco, SMTP ou SAD, use:
+
+```bash
+docker compose up -d --force-recreate php queue scheduler
+docker compose exec -T php php artisan config:clear
+```
+
+Para conferir as fontes efetivas sem exibir credenciais:
+
+```bash
+docker compose exec -T php php artisan tinker --execute="dump(config('bca.base_url'), config('bca.icea_url'));"
+```
 
 ---
 
@@ -144,3 +161,4 @@ Se `BCA_SAD_EMAIL` ficar vazio, o compilado diário simplesmente não é enviado
 5. Acesso à rede FAB/VPN validado (seção 2).
 6. Backup do banco agendado (`pg_dump`).
 7. HTTPS via proxy reverso (nginx/Caddy) à frente da porta 18080.
+8. `storage-init` concluído com status `0`, diretório de BCA gravável e `public/storage` apontando para `../storage/app/public`.

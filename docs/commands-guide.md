@@ -279,9 +279,10 @@ php artisan key:generate
 # Limpar sessions
 php artisan session:clear
 
-# Verificar permissões
-docker exec bca-php find storage bootstrap/cache -type d -exec chmod 775 {} \;
-docker exec bca-php find storage bootstrap/cache -type f -exec chmod 664 {} \;
+# Reaplicar e verificar permissões do storage
+docker compose run --rm storage-init
+docker compose exec -T queue php -r 'var_export(is_writable("/var/www/html/storage/app/public/bcas")); echo PHP_EOL;'
+readlink public/storage  # esperado: ../storage/app/public
 ```
 
 ---
@@ -347,9 +348,12 @@ php artisan optimize
 
 ### Problema: Permissões
 ```bash
-docker exec bca-php chown -R www-data:www-data storage bootstrap/cache
-docker exec bca-php chmod -R 775 storage bootstrap/cache
+docker compose run --rm storage-init
+docker compose up -d
+docker compose logs storage-init
 ```
+
+O ajuste de proprietário é feito pelo serviço privilegiado e efêmero `storage-init`. Os serviços permanentes continuam executando sem privilégios.
 
 ### Problema: Queue travada
 ```bash

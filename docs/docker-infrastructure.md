@@ -1,6 +1,6 @@
 # Docker e Infraestrutura
 
-**Versão:** 1.1.0 | **Status:** VIGENTE | **Projeto:** BCA Scrap v2
+**Versão:** 1.2.0 | **Status:** VIGENTE | **Projeto:** BCA Scrap v2
 
 ---
 
@@ -12,7 +12,7 @@
 │                                                              │
 │  ┌──────────┐   ┌──────────┐   ┌────────────┐              │
 │  │  nginx   │──▶│   php    │──▶│  postgres  │              │
-│  │ :8080→80 │   │ PHP-FPM  │   │  :5432     │              │
+│  │:18080→80 │   │ PHP-FPM  │   │  :5432     │              │
 │  └──────────┘   │  :9000   │   └────────────┘              │
 │                 └────┬─────┘          │                     │
 │                      │           ┌────────────┐             │
@@ -31,7 +31,7 @@
 
 ```dockerfile
 # docker/php/Dockerfile
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Instalar dependências do sistema
 RUN apk add --no-cache \
@@ -73,18 +73,18 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
 
 # Instalar Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Instalar Node.js e NPM (para build de assets)
 RUN apk add --no-cache nodejs npm
 
 # Configurar usuário não-root
-RUN addgroup -g 1000 bca && adduser -u 1000 -G bca -h /home/bca -D bca
-RUN chown -R bca:bca /var/www
+RUN addgroup -g 1000 -S www && adduser -u 1000 -S www -G www
+RUN chown -R www:www /var/www/html
 
 WORKDIR /var/www/html
 
-USER bca
+USER www
 
 EXPOSE 9000
 ```
@@ -220,7 +220,9 @@ server {
 
 ---
 
-## 🐳 Docker Compose Completo
+## 🐳 Referência do Docker Compose
+
+O arquivo [`../docker-compose.yml`](../docker-compose.yml) é a fonte de verdade. Ele inclui `storage-init`, `php`, `queue`, `scheduler`, `nginx`, PostgreSQL e Redis, com o volume `bcas_storage` compartilhado pelos serviços que acessam PDFs. O trecho abaixo é apenas uma referência de topologia e não deve substituir o arquivo versionado.
 
 ```yaml
 # docker-compose.yml (produção) — ver exemplos/docker-compose.yml.example para versão comentada
@@ -333,15 +335,34 @@ networks:
 
 ## 🔑 Permissões e Segurança
 
+O Compose possui um serviço de inicialização executado como `root` apenas para preparar o filesystem. Ele:
+
+- cria os diretórios exigidos pelo Laravel;
+- atribui `storage` e `bootstrap/cache` ao UID/GID `1000:1000`;
+- mantém a árvore pública legível pelo nginx;
+- cria `public/storage -> ../storage/app/public` como link relativo;
+- encerra com código diferente de zero se o link não resolver.
+
 ```bash
-# Configurar permissões corretas do storage
-docker exec bca-php chown -R www-data:www-data storage bootstrap/cache
-docker exec bca-php chmod -R 775 storage bootstrap/cache
+# Reaplicar as permissões de forma idempotente
+docker compose run --rm storage-init
+
+# Validar como o mesmo usuário da fila
+docker compose exec -T queue php -r '
+$path = "/var/www/html/storage/app/public/bcas";
+var_export(["writable" => is_writable($path), "owner" => fileowner($path)]);
+echo PHP_EOL;
+'
+
+# Esperado: writable=true, owner=1000 e symlink relativo
+readlink public/storage
 
 # Verificar que .env não está acessível pelo nginx
-curl -I http://localhost:8080/.env
+curl -I http://localhost:18080/.env
 # Esperado: HTTP 404 (não 200!)
 ```
+
+Não execute `chown` dentro de `php` ou `queue`, pois esses serviços rodam sem privilégios. Também não use `php artisan storage:link` sem `--relative`; o `storage-init` já mantém o link correto.
 
 ---
 
@@ -363,6 +384,6 @@ docker-compose logs -f php | grep -E "ERROR|WARN|horizon"
 
 ---
 
-**Próximo documento**: [08 - Testes](08_TESTES.md)
+**Próximo documento**: [Testes](testing.md)
 
-**Última atualização**: 14/03/2026
+**Última atualização**: 17/07/2026

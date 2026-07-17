@@ -2,7 +2,7 @@
 
 Sistema web para **buscar, processar e analisar os Boletins de Comando da Aeronáutica (BCA)** e alertar automaticamente quando um militar do efetivo da sua Organização Militar (OM) é citado numa publicação.
 
-Construído em **Laravel 12 + TALL Stack** (Tailwind, Alpine.js, Livewire) sobre PostgreSQL e Redis, empacotado em Docker. Projetado para ser **agnóstico e multi-unidade**: cada OM instala, configura e opera a sua própria instância isolada.
+Construído em **Laravel 12 + TALL Stack** (Tailwind, Alpine.js, Livewire) sobre PostgreSQL e Redis, empacotado em Docker. Cada OM instala, configura e opera a sua própria instância isolada.
 
 ---
 
@@ -12,7 +12,7 @@ Construído em **Laravel 12 + TALL Stack** (Tailwind, Alpine.js, Livewire) sobre
 - **Casa o texto contra o efetivo** cadastrado, por SARAM e por nome (busca full-text com `unaccent`), com alta precisão.
 - **Notifica por e-mail** o militar citado e envia um **compilado diário para a SAD**.
 - **Palavras-chave** configuráveis para destacar assuntos de interesse (ex.: nomes de programas, sistemas de armas).
-- **Multi-unidade com isolamento de dados**: operadores enxergam apenas o que é da sua OM; o admin enxerga tudo.
+- **Isolamento por instalação**: banco, Redis, PDFs, credenciais e usuários pertencem a uma única OM.
 - Processamento **assíncrono** (filas) para manter a interface fluida.
 
 ---
@@ -38,7 +38,7 @@ Em uma máquina com **Docker** e **Git**, dentro da rede corporativa (ou via VPN
 curl -fsSL https://raw.githubusercontent.com/nandinhos/bca_scrap_v2/main/install.sh | bash
 ```
 
-O instalador pergunta o nome/sigla da OM, o e-mail e a senha do administrador e a senha do banco, gera o `.env`, sobe os containers e roda as migrations e seeders. Ao final, o sistema está no ar em `http://localhost:18080`.
+O instalador pergunta o nome/sigla da OM, o e-mail e a senha do administrador e a senha do banco, gera o `.env`, prepara permissões e symlink do storage, compila a aplicação e roda migrations e seeders. Ao final, o sistema está no ar em `http://localhost:18080`.
 
 > Guia completo (manual, não-interativo e troubleshooting): **[INSTALL.md](INSTALL.md)**
 > Referência de todas as variáveis de configuração: **[docs/configuration.md](docs/configuration.md)**
@@ -63,18 +63,18 @@ Toda a configuração é feita por variáveis de ambiente no `.env` (veja `.env.
 
 ---
 
-## 🔀 Modelo multi-unidade
+## 🔀 Modelo operacional
 
-O sistema isola os dados por OM através da coluna `unidade_id`:
+O modo suportado é **uma instalação Docker por OM**, conforme a [ADR 0001](docs/adr/0001-uma-instancia-por-om.md). Cada VM possui seus próprios:
 
-| Perfil | Visibilidade |
-|---|---|
-| **Admin** (sem `unidade_id`) | Vê **tudo**, de **todas** as unidades; gerencia OMs, usuários e efetivo |
-| **Operador** (com `unidade_id`) | Vê **apenas** os dados da **sua** unidade |
+- PostgreSQL e Redis;
+- volume de PDFs dos BCA;
+- credenciais, administrador e SAD;
+- efetivo, palavras-chave e histórico.
 
-Fica isolado por unidade: efetivo (`/efetivo`), palavras-chave (`/palavras-chave`), ocorrências em BCA (`/historico` e dashboard). Para operar mais de uma OM na mesma instância, entre como admin e use a tela **Unidades** (`/unidades`).
+O código ainda contém estruturas de `unidade_id`, mas hospedar duas OMs na mesma VM ou banco está fora do escopo suportado. Admin e operador são papéis internos da OM instalada.
 
-Principais telas: `/dashboard` (busca), `/historico`, `/palavras-chave`, e — restritas a admin — `/efetivo`, `/usuarios`, `/unidades`, `/execucoes`.
+Principais telas: `/dashboard` (busca), `/historico`, `/palavras-chave`, e — restritas a admin — `/efetivo`, `/usuarios` e `/execucoes`.
 
 ---
 

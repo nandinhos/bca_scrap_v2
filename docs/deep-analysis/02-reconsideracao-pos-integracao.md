@@ -2,6 +2,8 @@
 
 Data: 2026-07-11
 
+> **Atualização de 2026-07-17:** o item P0-1 foi remediado nos commits de estabilização do instalador, culminando em `7efba41`. O instalador agora cobre clone limpo, Composer, frontend, variáveis de fonte, retomada segura, volume PostgreSQL anterior, permissões do volume de PDFs e symlink relativo. Os demais itens P0 permanecem independentes.
+
 ## Escopo aplicado
 
 Esta revisão considera uma única OM por instalação: VM, Docker, banco, Redis, volumes, firewall, administrador e SAD próprios. O BCA é ostensivo e o PDF local atende somente à intranet da própria OM. Não são necessários controles de segregação entre OMs, microserviços, banco central ou armazenamento compartilhado.
@@ -19,7 +21,7 @@ Esta revisão considera uma única OM por instalação: VM, Docker, banco, Redis
 
 | Prioridade | Item | Por que é necessário |
 |---|---|---|
-| P0-1 | Corrigir e testar a instalação limpa | Com `set -u`, a leitura de `$MAIL_MAILER` pode abortar a instalação. O instalador grava `BCA_BASE_URL=` e `BCA_ICEA_URL=`, anulando os defaults de `config/bca.php` e quebrando a busca. Também deve instalar dependências/assets de um clone limpo. |
+| P0-1 | Corrigir e testar a instalação limpa — **remediado em 2026-07-17** | O instalador passou a inicializar variáveis com segurança, preencher/fazer fallback das fontes BCA, instalar dependências/assets e validar banco, storage e symlink. |
 | P0-2 | Restringir a uma OM | O banco ainda aceita e a interface expõe múltiplas unidades. Bloquear a segunda OM torna o código coerente com a implantação decidida e evita um uso não suportado. |
 | P0-3 | Isolar o harness de testes | A rota documentada de Pest direto pode herdar variáveis operacionais. Banco, fila e e-mail de teste devem ser impostos, não apenas presumidos. |
 | P0-4 | Tornar reanálise/CSV recuperáveis | A reanálise apaga ocorrências antes do resultado substituto. Com `--redownload`, a supressão de e-mail não acompanha os jobs Redis e pode reenviar notificações. |

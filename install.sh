@@ -478,7 +478,7 @@ if [[ -z "${SAD_EMAIL}" ]]; then
     warn "Depois reinicie: docker compose exec -T --interactive=false php php artisan config:clear && docker compose restart queue"
 fi
 
-if [[ "$MAIL_MAILER" == "log" ]]; then
+if [[ "${MAIL_MAILER:-log}" == "log" ]]; then
     warn "MAIL_MAILER=log — e-mails serao gravados em storage/logs/laravel.log (nao enviados)."
     warn "Para envio real, edite o .env e configure: MAIL_MAILER=smtp + MAIL_HOST/USER/PASSWORD."
 fi

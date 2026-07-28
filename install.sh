@@ -383,6 +383,8 @@ fi
 # ============================================================
 log "Subindo containers Docker (pode demorar 2-5 min na primeira vez)..."
 
+docker compose down -v --remove-orphans >/dev/null 2>&1 || true
+
 docker compose up -d --build \
     || fatal "Falha ao subir containers. Rode 'docker compose logs' para detalhes."
 

@@ -286,7 +286,13 @@ if [[ -d "$INSTALL_DIR" ]]; then
         prompt REMOVE_EXISTING "Deseja removê-lo e continuar com a instalação? (s/N)" "s"
         if [[ "$REMOVE_EXISTING" =~ ^[sSyY]$ ]]; then
             log "Removendo diretório existente '$INSTALL_DIR'..."
-            rm -rf "$INSTALL_DIR" 2>/dev/null || sudo rm -rf "$INSTALL_DIR" 2>/dev/null || true
+            rm -rf "$INSTALL_DIR" 2>/dev/null || true
+            if [[ -d "$INSTALL_DIR" ]]; then
+                docker run --rm -v "$(pwd):/work" alpine rm -rf "/work/$INSTALL_DIR" 2>/dev/null || true
+            fi
+            if [[ -d "$INSTALL_DIR" ]]; then
+                sudo rm -rf "$INSTALL_DIR" 2>/dev/null || true
+            fi
             if [[ -d "$INSTALL_DIR" ]]; then
                 fatal "Não foi possível remover '$INSTALL_DIR'. Remova-o manualmente com 'sudo rm -rf $INSTALL_DIR'."
             fi
@@ -498,6 +504,11 @@ fi
 # ============================================================
 # 11. Permissões e link do storage
 # ============================================================
+log "Ajustando permissões de storage e bootstrap/cache..."
+
+docker compose exec -T --interactive=false php chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+
 log "Validando permissões e link simbólico do storage..."
 
 docker compose exec -T --interactive=false php php -r '

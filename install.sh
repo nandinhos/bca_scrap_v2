@@ -282,7 +282,19 @@ if [[ -d "$INSTALL_DIR" ]]; then
         git -C "$INSTALL_DIR" pull --ff-only origin "$REPO_BRANCH" \
             || fatal "Não foi possível atualizar o repositório existente. Verifique alterações locais ou divergências."
     else
-        fatal "Diretório $INSTALL_DIR já existe mas não é um repositório git."
+        warn "Diretório $INSTALL_DIR já existe mas não é um repositório git."
+        prompt REMOVE_EXISTING "Deseja removê-lo e continuar com a instalação? (s/N)" "s"
+        if [[ "$REMOVE_EXISTING" =~ ^[sSyY]$ ]]; then
+            log "Removendo diretório existente '$INSTALL_DIR'..."
+            rm -rf "$INSTALL_DIR" 2>/dev/null || sudo rm -rf "$INSTALL_DIR" 2>/dev/null || true
+            if [[ -d "$INSTALL_DIR" ]]; then
+                fatal "Não foi possível remover '$INSTALL_DIR'. Remova-o manualmente com 'sudo rm -rf $INSTALL_DIR'."
+            fi
+            git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR" \
+                || fatal "Falha ao clonar repositório"
+        else
+            fatal "Instalação abortada: diretório $INSTALL_DIR já existe."
+        fi
     fi
 else
     git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR" \

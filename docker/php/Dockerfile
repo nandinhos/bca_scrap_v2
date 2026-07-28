@@ -31,8 +31,8 @@ RUN docker-php-ext-install \
     xml \
     opcache
 
-# Install Redis extension (pinned version)
-RUN pecl install redis-6.1.0 && docker-php-ext-enable redis
+# Install Redis extension
+RUN pecl channel-update pecl.php.net && pecl install redis && docker-php-ext-enable redis
 
 # Configure OPcache
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \

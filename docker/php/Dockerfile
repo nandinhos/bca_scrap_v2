@@ -31,8 +31,10 @@ RUN docker-php-ext-install \
     xml \
     opcache
 
-# Install Redis extension
-RUN pecl channel-update pecl.php.net && pecl install redis && docker-php-ext-enable redis
+# Install Redis extension from GitHub release (avoids pecl.php.net SSL timeouts)
+RUN mkdir -p /usr/src/php/ext/redis \
+    && curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/6.1.0.tar.gz | tar -xzC /usr/src/php/ext/redis --strip-components=1 \
+    && docker-php-ext-install redis
 
 # Configure OPcache
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \

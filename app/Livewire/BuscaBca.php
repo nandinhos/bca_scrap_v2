@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Jobs\AnalisarEfetivoJob;
 use App\Jobs\BaixarBcaJob;
 use App\Jobs\EnviarEmailNotificacaoJob;
 use App\Models\Bca;
@@ -162,13 +163,33 @@ class BuscaBca extends Component
         $keywordsSelecionadasDiferentes = ! empty($diff1) || ! empty($diff2);
 
         $bca = Bca::where('data', $this->data)->whereNotNull('analisado_em')->first();
-        if ($bca && ! $keywordsSelecionadasDiferentes) {
-            $this->finalizarBusca($bca);
 
-            return;
-        }
+        if ($bca) {
+            $efetivoMudou = app(BcaAnalysisService::class)->efetivoMudouApos($bca->analisado_em);
 
-        if ($bca && $keywordsSelecionadasDiferentes) {
+            // Nada mudou desde a ultima analise: reaproveita o resultado gravado.
+            if (! $keywordsSelecionadasDiferentes && ! $efetivoMudou) {
+                $this->finalizarBusca($bca);
+
+                return;
+            }
+
+            // Mudou efetivo e/ou palavras-chave. O PDF ja foi baixado e convertido,
+            // entao reanalisa o texto armazenado sem baixar nada de novo.
+            if ($bca->texto_completo) {
+                $bca->update(['analisado_em' => null]);
+
+                AnalisarEfetivoJob::dispatch($bca->id, 'manual', $this->palavrasSelecionadas);
+
+                $this->mensagem = $efetivoMudou
+                    ? 'Efetivo alterado desde a última análise — reanalisando o BCA armazenado...'
+                    : 'Palavras-chave alteradas — reanalisando o BCA armazenado...';
+                $this->mensagemTipo = 'info';
+
+                return;
+            }
+
+            // Sem texto armazenado: precisa refazer o pipeline completo.
             $bca->update(['analisado_em' => null, 'processado_em' => null]);
         }
 

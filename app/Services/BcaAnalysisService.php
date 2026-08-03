@@ -16,6 +16,23 @@ use Illuminate\Support\Facades\Log;
 class BcaAnalysisService
 {
     /**
+     * Houve alteracao no efetivo (ou nas unidades, que filtram o efetivo)
+     * depois do momento informado?
+     *
+     * Usado para decidir se um BCA ja analisado precisa ser confrontado de novo
+     * com a lista do efetivo — caso classico: o BCA foi baixado e analisado antes
+     * de o efetivo ser importado.
+     *
+     * Exclusao de militar nao precisa ser detectada aqui: a FK efetivo_id em
+     * bca_ocorrencias e cascadeOnDelete, entao as ocorrencias somem junto.
+     */
+    public function efetivoMudouApos(\DateTimeInterface $momento): bool
+    {
+        return Efetivo::where('updated_at', '>', $momento)->exists()
+            || Unidade::where('updated_at', '>', $momento)->exists();
+    }
+
+    /**
      * Analyze the BCA text and find matching efetivos and keywords.
      * Returns count of new occurrences found.
      */
@@ -39,6 +56,7 @@ class BcaAnalysisService
         }
 
         $count = 0;
+        $novos = 0;
         $keywordsEncontradas = [];
 
         // 1. Search efetivos (lazyById + foreach - nao revisita linhas recem-criadas,
@@ -89,8 +107,17 @@ class BcaAnalysisService
                 if ($ocorrencia->wasRecentlyCreated || ! $ocorrencia->foiEnviado()) {
                     $count++;
                 }
-                if (config('bca.suppress_emails') !== true) {
-                    event(new MilitarEncontradoEvent($ocorrencia));
+
+                // Email automatico SOMENTE para ocorrencia criada nesta execucao.
+                // Em re-analise (efetivo ou palavras-chave alterados) as ocorrencias
+                // antigas nao enviadas ficam para envio manual, preservando a decisao
+                // do operador de nao notificar.
+                if ($ocorrencia->wasRecentlyCreated) {
+                    $novos++;
+
+                    if (config('bca.suppress_emails') !== true) {
+                        event(new MilitarEncontradoEvent($ocorrencia));
+                    }
                 }
             }
         }
@@ -136,7 +163,9 @@ class BcaAnalysisService
         if (config('bca.suppress_emails') === true) {
             Log::info("BCA [{$data}]: emails suprimidos via config('bca.suppress_emails')");
         } else {
-            if ($count > 0) {
+            // Compilado so faz sentido quando surgiu ocorrencia nova; senao uma
+            // re-analise reenviaria o mesmo compilado ao SAD a cada busca.
+            if ($novos > 0) {
                 EnviarCompiladoSADJob::dispatch($bca->id)->afterCommit();
             }
         }

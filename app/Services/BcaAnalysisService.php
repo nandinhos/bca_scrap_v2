@@ -47,7 +47,7 @@ class BcaAnalysisService
             return 0;
         }
 
-        $textoBca = Cache::get("bca:texto:{$data}") ?? $bca->texto_completo;
+        $textoBca = $bca->texto_completo;
 
         if (! $textoBca) {
             Log::warning("BCA [{$data}]: no text available for analysis");

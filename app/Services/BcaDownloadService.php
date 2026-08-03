@@ -228,8 +228,6 @@ class BcaDownloadService
             );
         }
 
-        Cache::put("bca:url:{$data}", $url, now()->addDays(30));
-
         return $path;
     }
 }

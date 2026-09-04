@@ -13,13 +13,24 @@ beforeEach(function () {
     Cache::flush();
 });
 
-it('returns null when cache says nao_encontrado', function () {
+it('descarta o cache nao_encontrado e refaz a busca', function () {
+    // O servico NAO retorna null direto quando o cache diz nao_encontrado: ele
+    // apaga a chave e tenta de novo (BcaDownloadService::baixarBca).
+    // Sem Http::fake este teste batia na intranet de verdade e so passava
+    // porque o DNS falhava — passando a afirmar o efeito colateral da rede.
     Cache::put('bca:query:2026-03-14', 'nao_encontrado', now()->addHour());
 
-    $service = app(BcaDownloadService::class);
-    $result = $service->baixarBca('2026-03-14');
+    Http::fake(Http::response('not found', 404));
+
+    $result = app(BcaDownloadService::class)->baixarBca('2026-03-14');
 
     expect($result)->toBeNull();
+
+    // Prova que houve nova tentativa de busca, e nao um curto-circuito no cache.
+    Http::assertSent(fn ($req) => str_contains($req->url(), 'busca_bca_data.php'));
+
+    // E que o resultado negativo foi recacheado para as proximas chamadas.
+    expect(Cache::get('bca:query:2026-03-14'))->toBe('nao_encontrado');
 });
 
 it('returns storage path when BCA is found via cache url', function () {

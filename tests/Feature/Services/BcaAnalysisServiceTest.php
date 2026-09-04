@@ -120,3 +120,26 @@ it('records active keywords found in BCA text', function () {
     expect(array_keys($mensagem['keywords_encontradas']))->toContain('KC-390');
     expect(array_keys($mensagem['keywords_encontradas']))->not->toContain('FX-2');
 });
+
+it('analisa o texto do banco e ignora cache de texto obsoleto', function () {
+    // A analise passou a ler exclusivamente bcas.texto_completo. Antes havia um
+    // fallback `Cache::get("bca:texto:{data}") ?? $bca->texto_completo`, que
+    // podia analisar um texto diferente do que estava persistido.
+    $efetivo = Efetivo::factory()->create([
+        'saram' => '1234567',
+        'nome_completo' => 'FULANO DE TAL',
+        'ativo' => true,
+        'oculto' => false,
+    ]);
+
+    $bca = Bca::factory()->create([
+        'texto_completo' => 'CONCEDE FERIAS AO SGT FULANO DE TAL SARAM 1234567',
+    ]);
+
+    Cache::put("bca:texto:{$bca->data->format('Y-m-d')}", 'TEXTO OBSOLETO SEM NINGUEM', now()->addDay());
+
+    app(BcaAnalysisService::class)->analisar($bca);
+
+    expect(BcaOcorrencia::where('bca_id', $bca->id)->where('efetivo_id', $efetivo->id)->exists())
+        ->toBeTrue();
+});

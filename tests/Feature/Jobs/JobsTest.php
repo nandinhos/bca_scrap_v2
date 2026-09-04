@@ -10,6 +10,8 @@ use App\Services\BcaAnalysisService;
 use App\Services\BcaDownloadService;
 use App\Services\BcaProcessingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,6 +24,11 @@ beforeEach(function () {
 
 it('BaixarBcaJob cria BcaExecucao quando BCA nao encontrado', function () {
     Queue::fake();
+
+    // Sem Http::fake o job baixava da intranet de verdade: varria 366 URLs com
+    // timeout e so passava porque a rede falhava. Dentro da rede da FAB poderia
+    // falhar — ou baixar um BCA real durante os testes.
+    Http::fake(Http::response('not found', 404));
 
     $job = new BaixarBcaJob('2026-03-14', []);
     $job->handle(app(BcaDownloadService::class));

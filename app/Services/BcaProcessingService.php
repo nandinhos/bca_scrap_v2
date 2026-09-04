@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Bca;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,27 +11,13 @@ class BcaProcessingService
     /**
      * Extract text from the PDF and update the BCA record.
      * Returns the extracted text or null on failure.
+     *
+     * Nao ha cache de texto: bcas.texto_completo e a unica fonte de verdade.
+     * Este metodo so e chamado por ProcessarBcaJob, logo apos o download, onde
+     * reextrair e o comportamento correto — o PDF acabou de chegar.
      */
     public function processarPdf(Bca $bca): ?string
     {
-        $cacheKey = "bca:texto:{$bca->data->format('Y-m-d')}";
-        $urlCacheKey = "bca:url:{$bca->data->format('Y-m-d')}";
-
-        $cached = Cache::get($cacheKey);
-        $cachedUrl = Cache::get($urlCacheKey);
-
-        if ($cached !== null) {
-            if ($cachedUrl && $bca->url && $cachedUrl !== $bca->url) {
-                Log::info("BCA [{$bca->data}]: URL changed (cached={$cachedUrl}, current={$bca->url}) — invalidating text cache");
-                Cache::forget($cacheKey);
-                Cache::forget($urlCacheKey);
-            } else {
-                Log::info("BCA [{$bca->data}]: texto from cache");
-
-                return $cached;
-            }
-        }
-
         if (! $bca->url) {
             Log::warning("BCA [{$bca->data}]: no URL to process");
 
@@ -75,15 +60,7 @@ class BcaProcessingService
                 return null;
             }
 
-            // Cache for 30 days
-            $cacheKey = "bca:texto:{$bca->data->format('Y-m-d')}";
-            $urlCacheKey = "bca:url:{$bca->data->format('Y-m-d')}";
-            Cache::put($cacheKey, $text, now()->addDays(30));
-            if ($bca->url) {
-                Cache::put($urlCacheKey, $bca->url, now()->addDays(30));
-            }
-
-            // Update DB
+            // Fonte de verdade unica: a coluna texto_completo.
             $bca->update([
                 'texto_completo' => $text,
                 'processado_em' => now(),

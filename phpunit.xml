@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
@@ -18,19 +18,21 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_KEY" value="base64:VeY8XUokF+UWwcFh8Hh4me+VaTjmoQ+mabtU98v4fXo="/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="pgsql"/>
-        <env name="DB_HOST" value="/var/run/postgresql"/>
-        <env name="DB_PORT" value="5432"/>
-        <env name="DB_DATABASE" value="bca_test"/>
-        <env name="DB_USERNAME" value="bca_test"/>
-        <env name="DB_PASSWORD" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
+        <!--
+            force="true" e OBRIGATORIO: o container ja define DB_DATABASE, QUEUE_CONNECTION,
+            CACHE_STORE e APP_ENV no environment. Sem force, o PHPUnit nao sobrescreve e a
+            suite roda contra o banco de PRODUCAO com fila em banco.
+            DB_HOST/DB_USERNAME/DB_PASSWORD sao herdados do container de proposito.
+        -->
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_KEY" value="base64:VeY8XUokF+UWwcFh8Hh4me+VaTjmoQ+mabtU98v4fXo=" force="true"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="DB_CONNECTION" value="pgsql" force="true"/>
+        <env name="DB_DATABASE" value="bca_test" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="TELESCOPE_ENABLED" value="false" force="true"/>
     </php>
 </phpunit>

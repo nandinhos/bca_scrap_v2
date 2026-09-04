@@ -79,7 +79,6 @@ class ReanalisarBcasCommand extends Command
 
             // 2. Limpar cache Redis
             Cache::forget("bca:query:{$dataStr}");
-            Cache::forget("bca:texto:{$dataStr}");
             Cache::forget("bca:analise:{$dataStr}");
 
             if ($redownload) {

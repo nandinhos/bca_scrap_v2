@@ -39,16 +39,27 @@ it('retorna null quando arquivo PDF nao existe', function () {
     expect($result)->toBeNull();
 });
 
-it('retorna texto do cache quando disponivel', function () {
-    $bca = Bca::factory()->create();
-    $cachedText = 'Texto em cache';
+it('ignora cache de texto obsoleto e usa o PDF como fonte', function () {
+    // As chaves bca:texto/bca:url foram removidas: a extracao le o arquivo e
+    // grava em bcas.texto_completo, que passa a ser a unica fonte de verdade.
+    // Antes, um texto em cache era devolvido mesmo sem o PDF existir.
+    $bca = Bca::factory()->create(['url' => 'bcas/nao-existe.pdf']);
 
-    Cache::put("bca:texto:{$bca->data->format('Y-m-d')}", $cachedText, now()->addDays(30));
+    Cache::put("bca:texto:{$bca->data->format('Y-m-d')}", 'texto obsoleto', now()->addDays(30));
 
-    $service = app(BcaProcessingService::class);
-    $result = $service->processarPdf($bca);
+    expect(app(BcaProcessingService::class)->processarPdf($bca))->toBeNull();
+});
 
-    expect($result)->toBe($cachedText);
+it('nao escreve mais as chaves de cache de texto', function () {
+    Storage::disk('public')->put('bcas/test.pdf', '%PDF-1.4 conteudo');
+
+    $bca = Bca::factory()->create(['url' => 'bcas/test.pdf']);
+    $data = $bca->data->format('Y-m-d');
+
+    app(BcaProcessingService::class)->processarPdf($bca);
+
+    expect(Cache::get("bca:texto:{$data}"))->toBeNull()
+        ->and(Cache::get("bca:url:{$data}"))->toBeNull();
 });
 
 it('atualiza BCA com texto extraido e marca processado_em', function () {

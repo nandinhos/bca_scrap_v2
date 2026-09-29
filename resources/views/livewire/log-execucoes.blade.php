@@ -14,7 +14,7 @@
             <tbody>
                 @forelse($execucoes as $ex)
                 <tr style="border-bottom:1px solid #f1f5f9">
-                    <td style="padding:12px 20px;font-family:monospace;font-size:12px;color:#64748b">{{ $ex->data_execucao->format('d/m/Y H:i:s') }}</td>
+                    <td style="padding:12px 20px;font-family:monospace;font-size:12px;color:#64748b">{{ $ex->data_execucao->timezone(config('app.local_timezone'))->format('d/m/Y H:i:s') }}</td>
                     <td style="padding:12px 20px"><span style="font-size:11px;background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:4px">{{ $ex->tipo }}</span></td>
                     <td style="padding:12px 20px">
                         @if($ex->status==='sucesso') <span style="font-size:11px;background:#f0fdf4;color:#16a34a;padding:3px 8px;border-radius:20px;font-weight:500">✓ sucesso</span>

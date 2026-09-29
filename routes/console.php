@@ -9,10 +9,11 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::job(new BaixarBcaJob(now()->format('Y-m-d')))
-    ->hourlyAt(0)
-    ->between('08:00', '17:00')
-    ->weekdays()
+// Cron em vez de between(): between('08:00', '17:00') descarta a execução das 17:00,
+// porque o scheduler dispara em 17:00:00.x, já depois do limite.
+Schedule::job(BaixarBcaJob::paraHoje())
+    ->cron('0 8-17 * * 1-5')
+    ->timezone(config('app.local_timezone'))
     ->withoutOverlapping(10)
     ->onOneServer()
     ->name('buscar-bca-diario');

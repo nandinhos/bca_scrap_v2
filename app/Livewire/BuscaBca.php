@@ -74,7 +74,7 @@ class BuscaBca extends Component
 
     public function mount(): void
     {
-        $this->data = now()->format('Y-m-d');
+        $this->data = now(config('app.local_timezone'))->format('Y-m-d');
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $userUnidadeId = $user?->unidade_id;

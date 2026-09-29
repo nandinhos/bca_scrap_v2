@@ -23,7 +23,7 @@ body{margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Arial,sa
         <p>Força Aérea Brasileira</p>
     </div>
     <div class="bd">
-        <p class="greeting">Olá, {{ $ocorrencia->efetivo->nome_guerra }}!</p>
+        <p class="greeting">Olá, {{ $ocorrencia->efetivo->getPostoNomeGuerra() }}!</p>
         <p class="text">Você foi mencionado no <strong>BCA nº {{ $ocorrencia->bca->numero }}</strong> de {{ $ocorrencia->bca->data->format('d/m/Y') }}.</p>
         @if($ocorrencia->snippet)
         <div class="snippet">{!! strip_tags($ocorrencia->snippet) !!}</div>

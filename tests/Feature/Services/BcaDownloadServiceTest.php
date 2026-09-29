@@ -4,6 +4,7 @@ use App\Services\BcaDownloadService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -80,10 +81,12 @@ it('caches nao_encontrado when BCA is not found', function () {
 });
 
 it('rejects PDF larger than max size', function () {
-    $maxBytes = 50 * 1024 * 1024;
-    $bodySize = $maxBytes + 1;
+    // Limite reduzido: com o padrão de 50MB, o Http::fake guarda cópias do corpo e estoura o memory_limit.
+    config(['bca.max_pdf_size_mb' => 1]);
+    $bodySize = 1024 * 1024 + 1;
 
     $hugeBody = str_repeat('x', $bodySize);
+    Log::spy();
     Cache::put('bca:query:2026-03-14', 'http://fake-url.mil.br/bca.pdf', now()->addHours(24));
 
     Http::fake([
@@ -94,4 +97,5 @@ it('rejects PDF larger than max size', function () {
     $result = $service->baixarBca('2026-03-14');
 
     expect($result)->toBeNull();
-})->skip('Teste de tamanho grande consome muita memoria em ambiente de teste');
+    Log::shouldHaveReceived('warning')->withArgs(fn ($msg) => str_contains($msg, 'PDF too large'))->once();
+});

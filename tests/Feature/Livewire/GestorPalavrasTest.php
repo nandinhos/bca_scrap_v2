@@ -44,7 +44,7 @@ it('operador não pode criar palavra-chave', function () {
         ->set('palavra', 'NOVA-PALAVRA')
         ->call('save')
         ->assertForbidden();
-})->skip('autorização em nível de rota');
+});
 
 it('pode alternar ativa status', function () {
     $admin = User::factory()->create(['role' => 'admin']);

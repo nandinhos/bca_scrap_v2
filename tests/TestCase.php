@@ -16,6 +16,12 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        // A suíte roda no mesmo container da produção: sem isso, o log dos testes
+        // cai no laravel.log real e polui o diagnóstico de incidentes.
+        config(['logging.channels.single.path' => storage_path('logs/testing.log')]);
+        app('log')->forgetChannel('stack');
+        app('log')->forgetChannel('single');
+
         $banco = DB::connection()->getDatabaseName();
 
         if ($banco !== 'bca_test' && ! str_contains($banco, ':memory:')) {

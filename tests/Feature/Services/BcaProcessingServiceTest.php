@@ -62,8 +62,37 @@ it('nao escreve mais as chaves de cache de texto', function () {
         ->and(Cache::get("bca:url:{$data}"))->toBeNull();
 });
 
+// PDF mínimo e válido (com xref correto) contendo apenas $texto — o suficiente para o pdftotext real.
+function pdfMinimo(string $texto): string
+{
+    $conteudo = "BT /F1 12 Tf 20 50 Td ({$texto}) Tj ET";
+    $objetos = [
+        '<</Type/Catalog/Pages 2 0 R>>',
+        '<</Type/Pages/Kids[3 0 R]/Count 1>>',
+        '<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 100]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>',
+        '<</Length '.strlen($conteudo).">>stream\n{$conteudo}\nendstream",
+        '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>',
+    ];
+
+    $pdf = "%PDF-1.4\n";
+    $offsets = [];
+    foreach ($objetos as $i => $objeto) {
+        $offsets[] = strlen($pdf);
+        $pdf .= ($i + 1)." 0 obj\n{$objeto}\nendobj\n";
+    }
+
+    $xref = strlen($pdf);
+    $pdf .= 'xref
+0 '.(count($objetos) + 1)."\n0000000000 65535 f \n";
+    foreach ($offsets as $offset) {
+        $pdf .= sprintf("%010d 00000 n \n", $offset);
+    }
+
+    return $pdf.'trailer<</Size '.(count($objetos) + 1)."/Root 1 0 R>>\nstartxref\n{$xref}\n%%EOF\n";
+}
+
 it('atualiza BCA com texto extraido e marca processado_em', function () {
-    Storage::disk('public')->put('bcas/test.pdf', '%PDF-1.4 test content');
+    Storage::disk('public')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
 
     $bca = Bca::factory()->create([
         'url' => 'bcas/test.pdf',
@@ -76,7 +105,9 @@ it('atualiza BCA com texto extraido e marca processado_em', function () {
 
     expect($result)->not->toBeNull();
 
+    expect($result)->toContain('BOLETIM DO COMANDO DA AERONAUTICA');
+
     $bca->refresh();
-    expect($bca->texto_completo)->not->toBeNull();
+    expect($bca->texto_completo)->toContain('BOLETIM DO COMANDO DA AERONAUTICA');
     expect($bca->processado_em)->not->toBeNull();
-})->skip('pdftotext nao disponivel no ambiente de teste');
+});

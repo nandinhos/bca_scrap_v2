@@ -30,7 +30,7 @@
                     <td style="padding:12px 20px;color:#94a3b8;font-size:12px">{{ $oc->efetivo->posto }}</td>
                     <td style="padding:12px 20px">
                         @if($oc->enviado_em)
-                            <span style="font-size:11px;background:#f0fdf4;color:#16a34a;padding:3px 8px;border-radius:20px;font-weight:500">✓ {{ $oc->enviado_em->format('d/m H:i') }}</span>
+                            <span style="font-size:11px;background:#f0fdf4;color:#16a34a;padding:3px 8px;border-radius:20px;font-weight:500">✓ {{ $oc->enviado_em->timezone(config('app.local_timezone'))->format('d/m H:i') }}</span>
                         @else
                             <span style="font-size:11px;color:#94a3b8">Pendente</span>
                         @endif

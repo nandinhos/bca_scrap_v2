@@ -29,6 +29,11 @@ class BaixarBcaJob implements ShouldQueue
         public readonly array $keywords = []
     ) {}
 
+    public static function paraHoje(): self
+    {
+        return new self(now(config('app.local_timezone'))->format('Y-m-d'));
+    }
+
     public function handle(BcaDownloadService $service): void
     {
         Log::info("BaixarBcaJob: starting for date {$this->data}");

@@ -46,4 +46,12 @@ class Efetivo extends Model
 
         return substr($s, 0, -1).'-'.substr($s, -1);
     }
+
+    /** Posto/graduação + nome de guerra ("Cel FONTES"); civis aparecem só pelo nome. */
+    public function getPostoNomeGuerra(): string
+    {
+        $posto = strcasecmp(trim((string) $this->posto), 'Civil') === 0 ? '' : $this->posto;
+
+        return trim("{$posto} {$this->nome_guerra}");
+    }
 }

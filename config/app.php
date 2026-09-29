@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    // Fuso do expediente (agendamento e exibição). Os dados seguem gravados em UTC.
+    'local_timezone' => env('APP_LOCAL_TIMEZONE', 'America/Sao_Paulo'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

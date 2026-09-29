@@ -25,7 +25,7 @@ it('lista efetivos ativos', function () {
 
     Livewire::test(ListagemEfetivo::class)
         ->assertSeeHtml('listagem-efetivo');
-})->skip('ilike não suportado em SQLite; roda apenas contra PostgreSQL');
+});
 
 it('admin pode criar efetivo', function () {
     $admin = User::factory()->create(['role' => 'admin']);

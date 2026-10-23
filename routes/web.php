@@ -11,14 +11,16 @@ use App\Livewire\ListagemEfetivo;
 use App\Livewire\LogExecucoes;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', [HealthController::class, 'check'])->name('health');
-Route::get('/metrics', [HealthController::class, 'metrics'])->name('metrics');
+Route::middleware('health.token')->group(function () {
+    Route::get('/health', [HealthController::class, 'check'])->name('health');
+    Route::get('/metrics', [HealthController::class, 'metrics'])->name('metrics');
+});
 
 Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'));
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 });
 
 Route::post('/logout', function () {

@@ -14,4 +14,6 @@ return [
     'max_pdf_size_mb' => (int) env('BCA_MAX_PDF_SIZE_MB', 50),
     // SAD email para envio do compilado (obrigatório configurar por OM via BCA_SAD_EMAIL)
     'sad_email' => env('BCA_SAD_EMAIL'),
+    // Token do monitor externo para /health e /metrics (header X-Health-Token)
+    'health_token' => env('HEALTH_TOKEN'),
 ];

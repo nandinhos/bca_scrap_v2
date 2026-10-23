@@ -16,7 +16,7 @@ class HealthController extends Controller
             DB::connection()->getPdo();
             $checks['database'] = 'ok';
         } catch (\Exception $e) {
-            $checks['database'] = 'error: '.$e->getMessage();
+            $checks['database'] = 'error';
             $status = 'unhealthy';
         }
 
@@ -33,7 +33,7 @@ class HealthController extends Controller
                 'sem_bca' => $recentExecucoes['sem_bca'] ?? 0,
             ];
         } catch (\Exception $e) {
-            $checks['execucoes_24h'] = 'error: '.$e->getMessage();
+            $checks['execucoes_24h'] = 'error';
             $status = 'unhealthy';
         }
 

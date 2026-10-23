@@ -1,0 +1,17 @@
+# Monitor do BCA Scrap em projeto Compose SEPARADO: derrubar a stack da
+# aplicacao nao derruba o monitor, e vice-versa.
+# Limite conhecido: roda na mesma VM — queda total da VM/hipervisor so e
+# detectada por monitoramento da TI fora dela. Ver docs/runbook-operacao.md.
+name: bca-monitor
+
+services:
+  monitor:
+    image: curlimages/curl:8.10.1
+    restart: unless-stopped
+    mem_limit: 32m
+    environment:
+      HEALTH_URL: "https://10.132.64.125:18443/health"
+      HEALTH_TOKEN: "${HEALTH_TOKEN:-}"
+    volumes:
+      - ./scripts/monitor-loop.sh:/monitor-loop.sh:ro
+    entrypoint: ["sh", "/monitor-loop.sh"]

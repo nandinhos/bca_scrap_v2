@@ -25,15 +25,16 @@ Conferir o relatório; os envios pendentes saem pela interface (BuscaBca → Env
 - Restore do banco (banco temporário, nunca sobre produção sem decisão):
   `CREATE DATABASE bca_restore_test;` e importar `banco.sql.gz` descompactado via `psql`.
 - Restore testado em 23/10/2026: 52 BCAs, 75 efetivos, 71 ocorrências, 52 PDFs íntegros.
-- Pendência conhecida: backup só neste host não protege contra perda do host — destino externo é decisão da OM.
+- Backup externo dispensado por decisão de 23/10/2026: a TI já faz backup da VM inteira. O backup local acima é para restore rápido e granular do banco, sem restaurar a VM.
 
 ## Monitoramento
 
 - `scripts/monitor.sh` consulta o `/health` com token e sai com erro se: sistema inacessível, status não saudável, BCA-do-dia pendente após 12h em dia útil, ou ≥3 `falha_fonte` em 24h.
-- Deve rodar **fora deste host** (outra máquina ou serviço de uptime). Neste host há um cron interino a cada 15 min gravando em `backups/monitor.log` — ele não detecta queda total do host.
+- Interino em produção: container separado (`docker-compose.monitor.yml`, projeto `bca-monitor`), consultando a cada 5 min — derrubar a aplicação não o derruba. Ver log: `docker compose -f docker-compose.monitor.yml logs`.
+- **BACKLOG (sem VM disponível para testar, decidido em 23/10/2026):** rodar o monitor fora desta VM (outro servidor/serviço de uptime). Só isso detecta queda total da VM; o container interino morre junto, em silêncio.
 
 ## Pendências de decisão (não técnicas)
 
-- TLS/certificado interno para sair do HTTP puro (cookie `Secure` só com HTTPS).
-- Monitor externo definitivo e destino externo de backup (decisão da OM).
+- TLS: resolvido em 23/10/2026 com certificado autoassinado da VM (`docker/nginx/certs/`, válido até jan/2029, chave fora do Git). Navegadores mostrarão aviso de certificado não confiável até a CA da OM emitir um oficial — para eliminar o aviso, instalar o `bca.crt` como confiável nas estações ou trocar pelo certificado oficial quando existir.
+- Monitor fora da VM: em backlog (ver Monitoramento).
 - Banco temporário `bca_restore_test` (criado no teste de restore) pode ser removido manualmente.

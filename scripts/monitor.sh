@@ -5,10 +5,11 @@
 # Uso: HEALTH_URL=http://10.132.64.125:18080/health HEALTH_TOKEN=... ./scripts/monitor.sh
 set -u
 
-URL="${HEALTH_URL:-http://10.132.64.125:18080/health}"
+URL="${HEALTH_URL:-https://10.132.64.125:18443/health}"
 TOKEN="${HEALTH_TOKEN:-}"
 
-BODY=$(curl -s -m 15 -H "X-Health-Token: ${TOKEN}" "$URL") || { echo "ALERTA: health inacessivel ($URL)"; exit 1; }
+# -k: certificado autoassinado da VM (esperado neste ambiente)
+BODY=$(curl -k -s -m 15 -H "X-Health-Token: ${TOKEN}" "$URL") || { echo "ALERTA: health inacessivel ($URL)"; exit 1; }
 echo "$BODY" | grep -q '"status":"healthy"' || { echo "ALERTA: status nao saudavel (resposta truncada):"; echo "$BODY" | head -c 200; echo; exit 1; }
 echo "$BODY" | grep -q '"bca_do_dia":"pendente"' && { echo "ALERTA: BCA do dia pendente apos 12h em dia util"; exit 1; }
 FALHAS=$(echo "$BODY" | grep -o '"falha_fonte_24h":[0-9]*' | cut -d: -f2)

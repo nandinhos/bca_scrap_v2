@@ -1,5 +1,8 @@
 <div>
     <h2 style="font-size:15px;font-weight:600;color:#1e293b;margin:0 0 16px">Log de Execuções</h2>
+    @if(($failedJobs ?? 0) > 0)
+    <p style="font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin:0 0 16px">⚠ {{ $failedJobs }} job(s) falharam definitivamente (failed_jobs). Verifique com <code>php artisan queue:failed</code>.</p>
+    @endif
     <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden">
         <table style="width:100%;border-collapse:collapse;font-size:13px">
             <thead>

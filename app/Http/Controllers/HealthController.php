@@ -37,6 +37,14 @@ class HealthController extends Controller
             $status = 'unhealthy';
         }
 
+        try {
+            $checks['failed_jobs'] = DB::table('failed_jobs')->count();
+            $checks['jobs_na_fila'] = DB::table('jobs')->count();
+        } catch (\Exception $e) {
+            $checks['failed_jobs'] = 'error';
+            $checks['jobs_na_fila'] = 'error';
+        }
+
         $response = [
             'status' => $status,
             'timestamp' => now()->toIso8601String(),

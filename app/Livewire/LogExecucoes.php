@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\BcaExecucao;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,6 +19,7 @@ class LogExecucoes extends Component
     {
         return view('livewire.log-execucoes', [
             'execucoes' => BcaExecucao::orderByDesc('data_execucao')->paginate(20),
+            'failedJobs' => DB::table('failed_jobs')->count(),
         ]);
     }
 }

@@ -2,10 +2,10 @@
 # Monitor externo do BCA Scrap: consulta /health com token e sai com
 # codigo != 0 se algo estiver errado. Rode FORA do host do sistema
 # (outra maquina/servico de uptime); neste host ele e apenas interino.
-# Uso: HEALTH_URL=http://10.132.64.125:18080/health HEALTH_TOKEN=... ./scripts/monitor.sh
+# Uso: HEALTH_URL=https://localhost:18443/health HEALTH_TOKEN=... ./scripts/monitor.sh
 set -u
 
-URL="${HEALTH_URL:-https://10.132.64.125:18443/health}"
+URL="${HEALTH_URL:-https://localhost:18443/health}"
 TOKEN="${HEALTH_TOKEN:-}"
 
 # -k: certificado autoassinado da VM (esperado neste ambiente)

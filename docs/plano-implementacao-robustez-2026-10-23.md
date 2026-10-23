@@ -134,7 +134,7 @@ Fechar os GAPs, débitos e panes ocultas da [analise-tecnica-2026-10-23.md](/hom
 
 1. **Monitor externo (2.1):** existe algum serviço de monitoramento da OM (Zabbix/Nagios/e-mail de plantão)? Se não, uso um `curl` cron de outra máquina + e-mail para a SAD, ou serviço gratuito de uptime?
 2. **Backup (1.6):** retenção só neste host basta por agora, ou já defino destino externo nesta fase?
-3. **Certificado TLS (3.2):** a OM emite certificado interno para `10.132.64.125`/hostname, ou o acesso continuará HTTP na Intraer por decisão formal?
+3. **Certificado TLS (3.2):** a OM emite certificado interno para `<IP_DA_VM>`/hostname, ou o acesso continuará HTTP na Intraer por decisão formal?
 4. **Retenção (2.10):** BCAs/PDFs antigos têm prazo legal de guarda? Sem prazo definido, o plano mantém tudo.
 
 Reply `go` to execute this plan, or tell me what to change.

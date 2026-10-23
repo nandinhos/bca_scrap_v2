@@ -1,7 +1,7 @@
 #!/bin/sh
 # Loop do monitor (container separado): consulta /health a cada 5 min.
 # Certificado autoassinado da VM => curl -k (esperado neste ambiente).
-URL="${HEALTH_URL:-https://10.132.64.125:18443/health}"
+URL="${HEALTH_URL:-https://host.docker.internal:18443/health}"
 
 while true; do
   BODY=$(curl -k -s -m 15 -H "X-Health-Token: ${HEALTH_TOKEN:-}" "$URL" 2>/dev/null)

@@ -26,13 +26,13 @@ A investigação identificou **duas causas raízes independentes** que ocorreram
 
 ### Causa Raiz A: Perda de Rota para a Intraer no Host Linux
 * **Topologia de Rede:** O servidor possui duas interfaces de rede físicas:
-  * `ens192` (`161.24.238.125/24`): Interface externa/DMZ com gateway padrão `161.24.238.200`.
-  * `ens160` (`10.132.64.125/23`): Interface interna da Intraer com gateway `10.132.64.200`.
-* **A Falha:** A rota estática `10.0.0.0/8 via 10.132.64.200 dev ens160` foi perdida na tabela de rotas do kernel Linux. Como consequência, qualquer requisição para servidores da Intraer (`www.cendoc.intraer` em `10.32.88.1` ou `www.icea.intraer` em `10.132.8.80`) era roteada pelo gateway padrão (`161.24.238.200 dev ens192`), sofrendo timeout.
+  * `ens192` (`161.24.238.125/24`): Interface externa/DMZ com gateway padrão `<GATEWAY_EXTERNO>`.
+  * `ens160` (`<IP_DA_VM>/23`): Interface interna da Intraer com gateway `<GATEWAY_INTRAER>`.
+* **A Falha:** A rota estática `<REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160` foi perdida na tabela de rotas do kernel Linux. Como consequência, qualquer requisição para servidores da Intraer (`www.cendoc.intraer` em `<IP_CENDOC>` ou `www.icea.intraer` em `<IP_ICEA>`) era roteada pelo gateway padrão (`<GATEWAY_EXTERNO> dev ens192`), sofrendo timeout.
 * **Por que a rota não subiu no boot:** No arquivo `/etc/network/interfaces`, a rota estava configurada incorretamente sem a diretiva `up`:
   ```text
   # ERRADO (ignorado pelo ifupdown do Debian):
-  ip route add 10.0.0.0/8 via 10.132.64.200 dev ens160
+  ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160
   ```
 
 ### Causa Raiz B: IP do Upstream FastCGI Desatualizado no Nginx
@@ -47,14 +47,14 @@ A investigação identificou **duas causas raízes independentes** que ocorreram
 ### 3.1. Restauração e Persistência da Rota da Intraer
 1. A rota estática foi adicionada imediatamente ao kernel do host:
    ```bash
-   ip route add 10.0.0.0/8 via 10.132.64.200 dev ens160
+   ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160
    ```
 2. O arquivo `/etc/network/interfaces` foi corrigido para garantir persistência após reinicializações:
    ```text
    auto ens160
    iface ens160 inet static
-   address 10.132.64.125/23
-   up ip route add 10.0.0.0/8 via 10.132.64.200 dev ens160
+   address <IP_DA_VM>/23
+   up ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160
    ```
 3. A conectividade com o CENDOC e ICEA foi retestada e validada com `HTTP/1.1 200 OK`.
 

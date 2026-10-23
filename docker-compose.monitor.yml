@@ -10,8 +10,10 @@ services:
     restart: unless-stopped
     mem_limit: 32m
     environment:
-      HEALTH_URL: "https://10.132.64.125:18443/health"
+      HEALTH_URL: "https://host.docker.internal:18443/health"
       HEALTH_TOKEN: "${HEALTH_TOKEN:-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./scripts/monitor-loop.sh:/monitor-loop.sh:ro
     entrypoint: ["sh", "/monitor-loop.sh"]

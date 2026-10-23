@@ -36,9 +36,29 @@ class EnviarCompiladoSADJob implements ShouldBeUnique, ShouldQueue
         return 'compilado-sad-'.$this->bcaId;
     }
 
+    /** Quantas vezes ja esperou os e-mails individuais (serializado na fila). */
+    public int $esperas = 0;
+
     public function handle(): void
     {
         $bca = Bca::with('ocorrencias.efetivo.unidade')->findOrFail($this->bcaId);
+
+        // Encadeamento pobre e confiavel: enquanto houver individual enviavel
+        // pendente, o compilado se reagenda (max ~5 min) em vez de sair
+        // parcial/vazio. ponytail: release-loop no proprio job dispensa
+        // Bus::chain atraves do listener de eventos.
+        $pendentes = $bca->ocorrencias()
+            ->whereNull('enviado_em')
+            ->whereHas('efetivo', fn ($q) => $q->where('oculto', false)->whereNotNull('email')->where('email', '!=', ''))
+            ->count();
+
+        if ($pendentes > 0 && $this->esperas < 20) {
+            $this->esperas++;
+            Log::info("EnviarCompiladoSADJob: aguardando {$pendentes} e-mail(is) individuais do BCA {$bca->data->format('Y-m-d')} (espera {$this->esperas})");
+            $this->release(15);
+
+            return;
+        }
 
         $ocorrencias = $bca->ocorrencias()
             ->whereNotNull('enviado_em')

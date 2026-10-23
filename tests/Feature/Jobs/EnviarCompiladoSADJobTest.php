@@ -69,6 +69,23 @@ it('envia compilado com adendo e destinatário extra somente quando informado', 
     });
 });
 
+it('aguarda individuais pendentes em vez de enviar compilado parcial', function () {
+    Mail::fake();
+
+    config(['bca.sad_email' => 'sad@om-exemplo.test']);
+    $efetivo = Efetivo::factory()->create(['email' => 'militar@example.com', 'oculto' => false]);
+    $bca = Bca::factory()->create();
+    BcaOcorrencia::create([
+        'bca_id' => $bca->id, 'efetivo_id' => $efetivo->id, 'snippet' => 'test', 'enviado_em' => null,
+    ]);
+
+    $job = new EnviarCompiladoSADJob($bca->id);
+    $job->handle();
+
+    Mail::assertNothingSent();
+    expect($job->esperas)->toBe(1);
+});
+
 it('does not send email when there are no sent occurrences', function () {
     Mail::fake();
 

@@ -11,7 +11,8 @@ class PalavraChaveSeeder extends Seeder
     {
         // Gate: nao polui prod. Em prod o OM cadastra as palavras reais pelo painel.
         if (app()->environment('production')) {
-            $this->command?->warn("PalavraChaveSeeder: pulando em production (cadastre palavras pelo painel).");
+            $this->command?->warn('PalavraChaveSeeder: pulando em production (cadastre palavras pelo painel).');
+
             return;
         }
 

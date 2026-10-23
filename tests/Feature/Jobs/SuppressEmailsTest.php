@@ -8,7 +8,6 @@ use App\Models\Efetivo;
 use App\Services\BcaAnalysisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 

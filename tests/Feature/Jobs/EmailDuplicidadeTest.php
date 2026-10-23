@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\EnviarCompiladoSADJob;
 use App\Jobs\EnviarEmailNotificacaoJob;
 use App\Mail\NotificacaoBcaMail;
 use App\Models\Bca;
@@ -44,5 +45,5 @@ it('reenvio intencional com adendo continua permitido', function () {
 
 it('jobs de e-mail sao unicos por ocorrencia e por BCA', function () {
     expect((new EnviarEmailNotificacaoJob(42))->uniqueId())->toBe('notificacao-42')
-        ->and((new \App\Jobs\EnviarCompiladoSADJob(7))->uniqueId())->toBe('compilado-sad-7');
+        ->and((new EnviarCompiladoSADJob(7))->uniqueId())->toBe('compilado-sad-7');
 });

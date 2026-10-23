@@ -17,11 +17,15 @@ class GestorUnidades extends Component
     protected string $paginationTheme = 'tailwind';
 
     public bool $showModal = false;
+
     public ?int $editingId = null;
 
     public string $nome = '';
+
     public string $sigla = '';
+
     public string $codigo = '';
+
     public bool $ativo = true;
 
     protected function rules(): array
@@ -30,8 +34,8 @@ class GestorUnidades extends Component
         $uniqueCodigo = 'unique:unidades,codigo';
 
         if ($this->editingId) {
-            $uniqueSigla .= ',' . $this->editingId;
-            $uniqueCodigo .= ',' . $this->editingId;
+            $uniqueSigla .= ','.$this->editingId;
+            $uniqueCodigo .= ','.$this->editingId;
         }
 
         return [

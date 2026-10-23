@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Bca;
+use App\Models\BcaOcorrencia;
+use App\Models\Efetivo;
 use App\Services\BcaProcessingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -99,9 +101,9 @@ it('PDF republicado com hash diferente poda ocorrencias e reseta analise', funct
         'pdf_hash' => 'hash-antigo-diferente',
         'analisado_em' => now(),
     ]);
-    \App\Models\BcaOcorrencia::create([
+    BcaOcorrencia::create([
         'bca_id' => $bca->id,
-        'efetivo_id' => \App\Models\Efetivo::factory()->create()->id,
+        'efetivo_id' => Efetivo::factory()->create()->id,
         'snippet' => 'x',
         'enviado_em' => now(),
     ]);

@@ -58,7 +58,7 @@ class ReanalisarBcasCommand extends Command
         $bcas = $query->get();
 
         if ($bcas->isEmpty()) {
-            $this->info("Nenhum BCA encontrado para o intervalo especificado.");
+            $this->info('Nenhum BCA encontrado para o intervalo especificado.');
 
             return self::SUCCESS;
         }

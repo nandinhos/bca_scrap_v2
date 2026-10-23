@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\BaixarBcaJob;
+use App\Jobs\EnviarEmailNotificacaoJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Carbon;
@@ -39,7 +40,7 @@ it('usa a data de Brasília para o BCA do dia', function (string $utc, string $d
 ]);
 
 it('limita o timeout do SMTP abaixo do timeout do job de e-mail', function () {
-    $jobTimeout = (new ReflectionClass(\App\Jobs\EnviarEmailNotificacaoJob::class))
+    $jobTimeout = (new ReflectionClass(EnviarEmailNotificacaoJob::class))
         ->getProperty('timeout')->getDefaultValue();
 
     expect(config('mail.mailers.smtp.timeout'))

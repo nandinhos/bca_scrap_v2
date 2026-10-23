@@ -19,8 +19,11 @@ abstract class TestCase extends BaseTestCase
         // A suíte roda no mesmo container da produção: sem isso, o log dos testes
         // cai no laravel.log real e polui o diagnóstico de incidentes.
         config(['logging.channels.single.path' => storage_path('logs/testing.log')]);
+        // Producao usa canal daily (rotacao); a suite isola ele tambem.
+        config(['logging.channels.daily.path' => storage_path('logs/testing.log')]);
         app('log')->forgetChannel('stack');
         app('log')->forgetChannel('single');
+        app('log')->forgetChannel('daily');
 
         $banco = DB::connection()->getDatabaseName();
 

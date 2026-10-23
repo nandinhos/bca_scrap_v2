@@ -3,15 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Models\Bca;
-use App\Models\BcaOcorrencia;
 use App\Services\BcaAnalysisService;
 use App\Services\BcaDownloadService;
 use App\Services\BcaProcessingService;
-use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class ProcessarRetroativosCommand extends Command
 {
@@ -33,6 +30,7 @@ class ProcessarRetroativosCommand extends Command
 
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $de) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $ate)) {
             $this->error('Formato de data inválido. Use Y-m-d.');
+
             return self::FAILURE;
         }
 
@@ -63,6 +61,7 @@ class ProcessarRetroativosCommand extends Command
 
                 if (! $path) {
                     $this->line('<fg=gray>Nenhum BCA encontrado.</>');
+
                     continue;
                 }
 
@@ -80,6 +79,7 @@ class ProcessarRetroativosCommand extends Command
 
             if (! $bca->processado_em || ! $bca->texto_completo) {
                 $this->line('<fg=red>Falha ao extrair texto do PDF.</>');
+
                 continue;
             }
 
@@ -105,7 +105,8 @@ class ProcessarRetroativosCommand extends Command
         $this->info("=== RELATÓRIO DE OCORRÊNCIAS NO PERÍODO ({$de} a {$ate}) ===");
 
         if (empty($bcasComOcorrencias)) {
-            $this->info("Nenhuma citação a militares do efetivo encontrada no período.");
+            $this->info('Nenhuma citação a militares do efetivo encontrada no período.');
+
             return self::SUCCESS;
         }
 

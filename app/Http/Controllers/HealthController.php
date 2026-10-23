@@ -101,7 +101,7 @@ class HealthController extends Controller
             $diffSegundos = DB::table('bca_execucoes')
                 ->where('data_execucao', '>=', now()->subDays(7))
                 ->whereNotNull('data_execucao')
-                ->select(DB::raw("extract(epoch from (data_execucao - lag(data_execucao) over (order by data_execucao))) as diff"))
+                ->select(DB::raw('extract(epoch from (data_execucao - lag(data_execucao) over (order by data_execucao))) as diff'))
                 ->get()
                 ->pluck('diff')
                 ->filter()

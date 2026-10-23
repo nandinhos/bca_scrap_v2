@@ -295,7 +295,7 @@ class ListagemEfetivo extends Component
 
     public function getImportLogText(): string
     {
-        $lines = ["Linha | Status | Mensagem"];
+        $lines = ['Linha | Status | Mensagem'];
         foreach ($this->importLog as $l) {
             $lines[] = "{$l['linha']} | {$l['status']} | {$l['msg']}";
         }

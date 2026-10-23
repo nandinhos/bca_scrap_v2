@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16.13-alpine
+        env:
+          POSTGRES_DB: bca_test
+          POSTGRES_USER: bca_user
+          POSTGRES_PASSWORD: bca_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U bca_user -d bca_test"
+          --health-interval=5s --health-timeout=3s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, mbstring, bcmath, gd, xml, redis
+
+      - name: Dependencias de sistema (pdftotext)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils postgresql-client
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Pint (estilo, sem corrigir)
+        run: ./vendor/bin/pint --test
+
+      - name: Composer audit
+        run: composer audit --no-interaction
+
+      - name: Suite de testes
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: bca_test
+          DB_USERNAME: bca_user
+          DB_PASSWORD: bca_pass
+        run: php artisan test

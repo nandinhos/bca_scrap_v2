@@ -43,6 +43,6 @@ class AdminDevSeeder extends Seeder
         }
         $admin->save();
 
-        echo 'OK: admin@bca.local / password vinculado a ' . $unidade->sigla . PHP_EOL;
+        echo 'OK: admin@bca.local / password vinculado a '.$unidade->sigla.PHP_EOL;
     }
 }

@@ -66,7 +66,7 @@ class BcaAnalysisService
         $efetivosQuery = Efetivo::ativo()
             ->where(function ($q) use ($unidadesAtivas) {
                 $q->whereHas('unidade', fn ($q2) => $q2->whereIn('id', $unidadesAtivas))
-                  ->orWhereDoesntHave('unidade');
+                    ->orWhereDoesntHave('unidade');
             });
         foreach ($efetivosQuery->lazyById(100, 'id') as $efetivo) {
             $matchedTerm = $this->encontraNoBca($efetivo, $textoBca);

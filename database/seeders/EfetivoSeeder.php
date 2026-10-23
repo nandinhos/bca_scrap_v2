@@ -11,7 +11,8 @@ class EfetivoSeeder extends Seeder
     {
         // Gate: nao polui prod com EXEMPLO*. Em prod o OM importa CSV real.
         if (app()->environment('production')) {
-            $this->command?->warn("EfetivoSeeder: pulando em production (importe CSV real pelo painel).");
+            $this->command?->warn('EfetivoSeeder: pulando em production (importe CSV real pelo painel).');
+
             return;
         }
 

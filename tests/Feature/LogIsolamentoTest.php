@@ -8,6 +8,10 @@ it('grava o log da suíte em testing.log, nunca no laravel.log de produção', f
     Log::info($marcador);
 
     $producao = storage_path('logs/laravel.log');
+    // Canal daily rotaciona: o arquivo ativo da suite e testing-<data>.log
+    $arquivosTeste = glob(storage_path('logs/testing*.log')) ?: [];
+    $conteudoTeste = implode('', array_map('file_get_contents', $arquivosTeste));
+
     expect(file_exists($producao) ? file_get_contents($producao) : '')->not->toContain($marcador)
-        ->and(file_get_contents(storage_path('logs/testing.log')))->toContain($marcador);
+        ->and($conteudoTeste)->toContain($marcador);
 });

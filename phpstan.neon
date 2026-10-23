@@ -1,0 +1,9 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+    # Comeca baixo de proposito: sobe um nivel por vez conforme zera.
+    # ponytail: nivel 1 agora; meta nivel 5 quando os erros reais zerarem.
+    level: 1

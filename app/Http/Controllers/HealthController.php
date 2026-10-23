@@ -92,17 +92,19 @@ class HealthController extends Controller
         $ultimos7dias = BcaExecucao::where('data_execucao', '>=', now()->subDays(7))
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
-            ->get()
             ->pluck('total', 'status')
             ->toArray();
 
         $tempoMedio = null;
         try {
-            $diffSegundos = DB::table('bca_execucoes')
-                ->where('data_execucao', '>=', now()->subDays(7))
-                ->whereNotNull('data_execucao')
-                ->select(DB::raw('extract(epoch from (data_execucao - lag(data_execucao) over (order by data_execucao))) as diff'))
-                ->get()
+            $diffSegundos = DB::query()
+                ->fromSub(
+                    DB::table('bca_execucoes')
+                        ->where('data_execucao', '>=', now()->subDays(7))
+                        ->whereNotNull('data_execucao')
+                        ->select(DB::raw('extract(epoch from (data_execucao - lag(data_execucao) over (order by data_execucao))) as diff')),
+                    't'
+                )
                 ->pluck('diff')
                 ->filter()
                 ->values();

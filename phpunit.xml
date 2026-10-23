@@ -18,6 +18,9 @@
         </include>
     </source>
     <php>
+        <!-- LogIsolamentoTest le o laravel.log montado no container (pode passar de
+             256 MB em producao); 128 MB (padrao do PHP) estoura ao carregar o arquivo. -->
+        <ini name="memory_limit" value="2048M"/>
         <!--
             force="true" e OBRIGATORIO: o container ja define DB_DATABASE, QUEUE_CONNECTION,
             CACHE_STORE e APP_ENV no environment. Sem force, o PHPUnit nao sobrescreve e a

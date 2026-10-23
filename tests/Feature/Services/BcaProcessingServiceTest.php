@@ -91,6 +91,29 @@ function pdfMinimo(string $texto): string
     return $pdf.'trailer<</Size '.(count($objetos) + 1)."/Root 1 0 R>>\nstartxref\n{$xref}\n%%EOF\n";
 }
 
+it('PDF republicado com hash diferente poda ocorrencias e reseta analise', function () {
+    Storage::disk('public')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
+
+    $bca = Bca::factory()->create([
+        'url' => 'bcas/test.pdf',
+        'pdf_hash' => 'hash-antigo-diferente',
+        'analisado_em' => now(),
+    ]);
+    \App\Models\BcaOcorrencia::create([
+        'bca_id' => $bca->id,
+        'efetivo_id' => \App\Models\Efetivo::factory()->create()->id,
+        'snippet' => 'x',
+        'enviado_em' => now(),
+    ]);
+
+    app(BcaProcessingService::class)->processarPdf($bca);
+
+    $bca->refresh();
+    expect($bca->ocorrencias()->count())->toBe(0)
+        ->and($bca->analisado_em)->toBeNull()
+        ->and($bca->pdf_hash)->not->toBe('hash-antigo-diferente');
+});
+
 it('atualiza BCA com texto extraido e marca processado_em', function () {
     Storage::disk('public')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
 

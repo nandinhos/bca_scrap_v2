@@ -32,6 +32,16 @@ class BcaProcessingService
             return null;
         }
 
+        // Republicacao: PDF da mesma data mudou => ocorrencias antigas nao
+        // valem mais. Poda antes de reextrair para a reanalise partir do zero.
+        $hash = hash_file('sha256', $storagePath);
+        if ($bca->pdf_hash && $hash !== $bca->pdf_hash && $bca->analisado_em) {
+            $removidas = $bca->ocorrencias()->delete();
+            $bca->update(['analisado_em' => null, 'keywords_encontradas' => null]);
+            Log::warning("BCA [{$bca->data}]: PDF republicado (hash mudou) — {$removidas} ocorrencia(s) podadas para reanalise");
+        }
+        $bca->update(['pdf_hash' => $hash]);
+
         return $this->extrairTexto($storagePath, $bca);
     }
 

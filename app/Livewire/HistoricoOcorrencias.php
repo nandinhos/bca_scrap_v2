@@ -35,8 +35,10 @@ class HistoricoOcorrencias extends Component
         $userUnidadeId = $user?->unidade_id;
 
         $query = BcaOcorrencia::with(['efetivo', 'bca'])
-            ->when(! $isAdmin && $userUnidadeId, function ($q) use ($userUnidadeId) {
-                $q->whereHas('efetivo', fn ($sub) => $sub->where('unidade_id', $userUnidadeId));
+            ->when(! $isAdmin, function ($q) use ($userUnidadeId) {
+                $userUnidadeId
+                    ? $q->whereHas('efetivo', fn ($sub) => $sub->where('unidade_id', $userUnidadeId))
+                    : $q->whereRaw('1 = 0');
             })
             ->orderByDesc('created_at');
 

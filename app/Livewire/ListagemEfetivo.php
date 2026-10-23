@@ -139,7 +139,7 @@ class ListagemEfetivo extends Component
         }
 
         $ids = Efetivo::query()
-            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->when(! $isAdmin, fn ($q) => $userUnidadeId ? $q->where('unidade_id', $userUnidadeId) : $q->whereRaw('1 = 0'))
             ->when($this->search, fn ($q) => $q->where('nome_guerra', 'ilike', "%{$this->search}%")
                 ->orWhere('nome_completo', 'ilike', "%{$this->search}%")
                 ->orWhere('saram', 'like', "%{$this->search}%"))
@@ -160,7 +160,7 @@ class ListagemEfetivo extends Component
 
         Efetivo::query()
             ->whereIn('id', $this->selectedIds)
-            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->when(! $isAdmin, fn ($q) => $userUnidadeId ? $q->where('unidade_id', $userUnidadeId) : $q->whereRaw('1 = 0'))
             ->delete();
         $this->selectedIds = [];
         $this->resetPage();
@@ -173,7 +173,7 @@ class ListagemEfetivo extends Component
         $userUnidadeId = $user?->unidade_id;
 
         $efetivos = Efetivo::query()
-            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->when(! $isAdmin, fn ($q) => $userUnidadeId ? $q->where('unidade_id', $userUnidadeId) : $q->whereRaw('1 = 0'))
             ->orderBy('nome_guerra')
             ->get();
 
@@ -311,7 +311,7 @@ class ListagemEfetivo extends Component
 
         return view('livewire.listagem-efetivo', [
             'efetivos' => Efetivo::query()
-                ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+                ->when(! $isAdmin, fn ($q) => $userUnidadeId ? $q->where('unidade_id', $userUnidadeId) : $q->whereRaw('1 = 0'))
                 ->when($this->search, fn ($q) => $q->where('nome_guerra', 'ilike', "%{$this->search}%")
                     ->orWhere('nome_completo', 'ilike', "%{$this->search}%")
                     ->orWhere('saram', 'like', "%{$this->search}%"))

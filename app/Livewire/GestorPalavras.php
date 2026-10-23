@@ -43,7 +43,7 @@ class GestorPalavras extends Component
         $userUnidadeId = $user?->unidade_id;
 
         $this->palavras = PalavraChave::query()
-            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->when(! $isAdmin, fn ($q) => $userUnidadeId ? $q->where('unidade_id', $userUnidadeId) : $q->whereRaw('1 = 0'))
             ->orderBy('palavra')
             ->get()
             ->toArray();
@@ -65,7 +65,7 @@ class GestorPalavras extends Component
         $userUnidadeId = $user?->unidade_id;
 
         PalavraChave::query()
-            ->when(! $isAdmin && $userUnidadeId, fn ($q) => $q->where('unidade_id', $userUnidadeId))
+            ->when(! $isAdmin, fn ($q) => $userUnidadeId ? $q->where('unidade_id', $userUnidadeId) : $q->whereRaw('1 = 0'))
             ->update(['ativa' => $ativa]);
         $this->reload();
     }

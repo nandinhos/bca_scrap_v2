@@ -61,6 +61,16 @@
                         <option value="admin">Admin</option>
                     </select>
                 </div>
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase">Unidade (obrigatória p/ operador)</label>
+                    <select wire:model="unidadeId" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:14px;font-family:inherit;background:white">
+                        <option value="">— Selecione —</option>
+                        @foreach($unidades as $un)
+                        <option value="{{ $un->id }}">{{ $un->sigla }}</option>
+                        @endforeach
+                    </select>
+                    @error('unidadeId')<p style="font-size:12px;color:#dc2626;margin:4px 0 0">{{ $message }}</p>@enderror
+                </div>
             </div>
             <div style="display:flex;gap:8px;margin-top:24px">
                 <button wire:click="$set('showModal',false)" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:white;font-size:14px;cursor:pointer;font-family:inherit">Cancelar</button>

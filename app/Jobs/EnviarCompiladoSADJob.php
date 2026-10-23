@@ -25,7 +25,9 @@ class EnviarCompiladoSADJob implements ShouldQueue
     public array $backoff = [30, 60, 120];
 
     public function __construct(
-        public readonly int $bcaId
+        public readonly int $bcaId,
+        public readonly ?string $adendo = null,
+        public readonly array $destinatariosExtras = []
     ) {}
 
     public function handle(): void
@@ -45,15 +47,19 @@ class EnviarCompiladoSADJob implements ShouldQueue
 
         $sadEmail = Config::get('bca.sad_email');
 
-        if (empty($sadEmail)) {
+        $destinatarios = array_values(array_unique(array_filter(
+            array_merge($sadEmail ? [$sadEmail] : [], $this->destinatariosExtras)
+        )));
+
+        if (empty($destinatarios)) {
             Log::warning('EnviarCompiladoSADJob: sad_email não configurado');
 
             return;
         }
 
-        Mail::to($sadEmail)->send(new CompiladoSadMail($bca, $ocorrencias));
+        Mail::to($destinatarios)->send(new CompiladoSadMail($bca, $ocorrencias, $this->adendo));
 
-        Log::info("EnviarCompiladoSADJob: compilado enviado para SAD ({$sadEmail}), {$ocorrencias->count()} militares");
+        Log::info('EnviarCompiladoSADJob: compilado enviado para '.implode(', ', $destinatarios).", {$ocorrencias->count()} militares");
 
         BcaExecucao::create([
             'tipo' => 'compilado_sad',

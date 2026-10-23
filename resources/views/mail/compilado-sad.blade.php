@@ -7,7 +7,7 @@ body{margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Arial,sa
 .wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .hd{background:#1e3a5f;padding:24px 32px}
 .hd h1{margin:0;color:#fff;font-size:18px;font-weight:600}
-.hd p{margin:4px 0 0;color:rgba(255,255,255,.6);font-size:13px}
+.hd p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
 .bd{padding:28px 32px}
 .title{font-size:15px;color:#1e293b;font-weight:600;margin:0 0 12px}
 .text{font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px}
@@ -17,6 +17,7 @@ th{background:#1e3a5f;color:#fff;padding:10px 12px;text-align:left;font-weight:6
 td{padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#334155}
 tr:last-child td{border-bottom:none}
 .btn{display:inline-block;background:#1e3a5f;color:#fff;text-decoration:none;padding:11px 24px;border-radius:8px;font-size:14px;font-weight:600}
+.note{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:13px;color:#92400e;line-height:1.6;margin:0 0 20px;font-style:italic}
 .ft{background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8}
 </style>
 </head>
@@ -24,7 +25,7 @@ tr:last-child td{border-bottom:none}
 <div class="wrap">
     <div class="hd">
         <h1>📋 Compilado Diário - {{ config('app.name', 'BCA Scrap') }}</h1>
-        <p>Força Aérea Brasileira</p>
+        <p style="color:#cbd5e1">Força Aérea Brasileira</p>
     </div>
     <div class="bd">
         <p class="title">BCA nº {{ $bca->numero }} de {{ $bca->data->format('d/m/Y') }}</p>
@@ -53,6 +54,9 @@ tr:last-child td{border-bottom:none}
         </div>
         @if($bcaDownloadUrl ?? null)
         <a href="{{ $bcaDownloadUrl }}" class="btn">Ver BCA completo →</a>
+        @endif
+        @if($adendo ?? null)
+        <p class="note" style="margin-top:20px">{{ $adendo }}</p>
         @endif
     </div>
     <div class="ft">Email automático — {{ config('app.name', 'BCA Scrap') }} · FAB</div>

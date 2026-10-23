@@ -45,6 +45,30 @@ it('sends compiled report to SAD when there are occurrences', function () {
     });
 });
 
+it('envia compilado com adendo e destinatário extra somente quando informado', function () {
+    Mail::fake();
+
+    config(['bca.sad_email' => 'sad@om-exemplo.test']);
+
+    $efetivo = Efetivo::factory()->create(['email' => 'militar@example.com']);
+    $bca = Bca::factory()->create();
+    BcaOcorrencia::create([
+        'bca_id' => $bca->id,
+        'efetivo_id' => $efetivo->id,
+        'snippet' => 'test',
+        'enviado_em' => now(),
+    ]);
+
+    EnviarCompiladoSADJob::dispatch($bca->id, 'Nota excepcional de teste.', ['extra@om-exemplo.test']);
+
+    Mail::assertSent(CompiladoSadMail::class, function ($mail) {
+        return $mail->hasTo('sad@om-exemplo.test')
+            && $mail->hasTo('extra@om-exemplo.test')
+            && $mail->adendo === 'Nota excepcional de teste.'
+            && str_contains($mail->render(), 'Nota excepcional de teste.');
+    });
+});
+
 it('does not send email when there are no sent occurrences', function () {
     Mail::fake();
 

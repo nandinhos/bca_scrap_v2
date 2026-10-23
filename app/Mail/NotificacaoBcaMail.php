@@ -15,7 +15,8 @@ class NotificacaoBcaMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly BcaOcorrencia $ocorrencia
+        public readonly BcaOcorrencia $ocorrencia,
+        public readonly ?string $adendo = null
     ) {}
 
     public function envelope(): Envelope
@@ -33,6 +34,7 @@ class NotificacaoBcaMail extends Mailable
             view: 'mail.notificacao-bca',
             with: [
                 'bcaDownloadUrl' => $bcaDownloadUrl,
+                'adendo' => $this->adendo,
             ],
         );
     }

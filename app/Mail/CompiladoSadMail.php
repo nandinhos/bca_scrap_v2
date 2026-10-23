@@ -17,7 +17,8 @@ class CompiladoSadMail extends Mailable
 
     public function __construct(
         public readonly Bca $bca,
-        public readonly Collection $ocorrencias
+        public readonly Collection $ocorrencias,
+        public readonly ?string $adendo = null
     ) {}
 
     public function envelope(): Envelope
@@ -35,6 +36,7 @@ class CompiladoSadMail extends Mailable
             view: 'mail.compilado-sad',
             with: [
                 'bcaDownloadUrl' => $bcaDownloadUrl,
+                'adendo' => $this->adendo,
             ],
         );
     }

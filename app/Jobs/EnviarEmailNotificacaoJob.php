@@ -26,7 +26,8 @@ class EnviarEmailNotificacaoJob implements ShouldQueue
     public int $maxExceptions = 3;
 
     public function __construct(
-        public readonly int $ocorrenciaId
+        public readonly int $ocorrenciaId,
+        public readonly ?string $adendo = null
     ) {}
 
     public function handle(): void
@@ -47,7 +48,7 @@ class EnviarEmailNotificacaoJob implements ShouldQueue
 
         try {
             Mail::to($ocorrencia->efetivo->email)
-                ->send(new NotificacaoBcaMail($ocorrencia));
+                ->send(new NotificacaoBcaMail($ocorrencia, $this->adendo));
 
             $ocorrencia->update(['enviado_em' => now()]);
 

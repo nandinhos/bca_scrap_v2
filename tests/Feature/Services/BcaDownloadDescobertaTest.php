@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Storage::fake('public');
+    Storage::fake('bcas');
     Cache::flush();
     config([
         'bca.base_url' => 'http://cendoc.test/consulta/',
@@ -37,7 +38,7 @@ it('descobre pelo CENDOC e baixa pela URL indicada sem zero-leading na data', fu
     $path = app(BcaDownloadService::class)->baixarBca('2026-04-08');
 
     expect($path)->toBe('bcas/2026-04-08.pdf')
-        ->and(Storage::disk('public')->exists('bcas/2026-04-08.pdf'))->toBeTrue();
+        ->and(Storage::disk('bcas')->exists('bcas/2026-04-08.pdf'))->toBeTrue();
     // Regressao 08/05/2026: dia/mes sem zero a esquerda (8-4, nunca 08-04)
     expect(collect($urlsPedidas)->contains(fn ($u) => str_contains($u, '08-04-2026')))->toBeFalse();
 });

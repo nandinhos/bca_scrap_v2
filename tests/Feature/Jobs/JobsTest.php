@@ -19,6 +19,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
+    Storage::fake('bcas');
     Cache::flush();
 });
 

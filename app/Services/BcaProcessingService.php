@@ -24,7 +24,7 @@ class BcaProcessingService
             return null;
         }
 
-        $storagePath = Storage::disk('public')->path($bca->url);
+        $storagePath = Storage::disk('bcas')->path($bca->url);
 
         if (! file_exists($storagePath)) {
             Log::error("BCA [{$bca->data}]: PDF file not found at {$storagePath}");

@@ -212,7 +212,7 @@ class BcaDownloadService
         }
 
         $path = "bcas/{$data}.pdf";
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('bcas');
 
         try {
             if (! $disk->put($path, $body) || ! $disk->exists($path)) {

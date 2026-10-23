@@ -38,6 +38,14 @@ return [
             'report' => false,
         ],
 
+        // PDFs de BCA: disco privado, download so via rota autenticada (bca.pdf)
+        'bcas' => [
+            'driver' => 'local',
+            'root' => storage_path('app/bcas'),
+            'throw' => true,
+            'report' => true,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

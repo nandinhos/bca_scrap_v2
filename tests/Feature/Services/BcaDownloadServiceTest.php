@@ -11,6 +11,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
+    Storage::fake('bcas');
     Cache::flush();
 });
 
@@ -45,7 +46,7 @@ it('returns storage path when BCA is found via cache url', function () {
     $result = $service->baixarBca('2026-03-14');
 
     expect($result)->toBe('bcas/2026-03-14.pdf');
-    Storage::disk('public')->assertExists('bcas/2026-03-14.pdf');
+    Storage::disk('bcas')->assertExists('bcas/2026-03-14.pdf');
 });
 
 it('throws when the PDF cannot be persisted', function () {
@@ -64,7 +65,7 @@ it('throws when the PDF cannot be persisted', function () {
         ->once()
         ->with('bcas/2026-03-14.pdf', Mockery::type('string'))
         ->andReturnFalse();
-    Storage::shouldReceive('disk')->once()->with('public')->andReturn($disk);
+    Storage::shouldReceive('disk')->once()->with('bcas')->andReturn($disk);
 
     expect(fn () => app(BcaDownloadService::class)->baixarBca('2026-03-14'))
         ->toThrow(RuntimeException::class, 'Não foi possível gravar o PDF');

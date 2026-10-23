@@ -14,6 +14,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     Cache::flush();
     Storage::fake('public');
+    Storage::fake('bcas');
     Log::shouldReceive('info')->andReturnNull()->byDefault();
     Log::shouldReceive('warning')->andReturnNull()->byDefault();
     Log::shouldReceive('error')->andReturnNull()->byDefault();
@@ -53,7 +54,7 @@ it('ignora cache de texto obsoleto e usa o PDF como fonte', function () {
 });
 
 it('nao escreve mais as chaves de cache de texto', function () {
-    Storage::disk('public')->put('bcas/test.pdf', '%PDF-1.4 conteudo');
+    Storage::disk('bcas')->put('bcas/test.pdf', '%PDF-1.4 conteudo');
 
     $bca = Bca::factory()->create(['url' => 'bcas/test.pdf']);
     $data = $bca->data->format('Y-m-d');
@@ -94,7 +95,7 @@ function pdfMinimo(string $texto): string
 }
 
 it('PDF republicado com hash diferente poda ocorrencias e reseta analise', function () {
-    Storage::disk('public')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
+    Storage::disk('bcas')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
 
     $bca = Bca::factory()->create([
         'url' => 'bcas/test.pdf',
@@ -117,7 +118,7 @@ it('PDF republicado com hash diferente poda ocorrencias e reseta analise', funct
 });
 
 it('atualiza BCA com texto extraido e marca processado_em', function () {
-    Storage::disk('public')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
+    Storage::disk('bcas')->put('bcas/test.pdf', pdfMinimo('BOLETIM DO COMANDO DA AERONAUTICA'));
 
     $bca = Bca::factory()->create([
         'url' => 'bcas/test.pdf',

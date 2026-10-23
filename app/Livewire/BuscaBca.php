@@ -263,7 +263,7 @@ class BuscaBca extends Component
     private function finalizarBusca(Bca $bca): void
     {
         $this->bcaId = $bca->id;
-        $this->pdfUrl = Storage::disk('public')->url($bca->url);
+        $this->pdfUrl = $bca->url ? route('bca.pdf', $bca->data->format('Y-m-d')) : null;
 
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BcaPdfController;
 use App\Http\Controllers\HealthController;
 use App\Livewire\BuscaBca;
 use App\Livewire\GestorPalavras;
@@ -32,6 +33,8 @@ Route::post('/logout', function () {
 })->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/bca/{data}/pdf', [BcaPdfController::class, 'download'])
+        ->where('data', '\d{4}-\d{2}-\d{2}')->name('bca.pdf');
     Route::get('/dashboard', BuscaBca::class)->name('dashboard');
     Route::get('/historico', HistoricoOcorrencias::class)->name('historico');
     Route::get('/palavras-chave', GestorPalavras::class)->name('palavras-chave');

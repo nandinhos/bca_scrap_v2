@@ -6,6 +6,7 @@ use App\Mail\CompiladoSadMail;
 use App\Models\Bca;
 use App\Models\BcaExecucao;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-class EnviarCompiladoSADJob implements ShouldQueue
+class EnviarCompiladoSADJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -29,6 +30,11 @@ class EnviarCompiladoSADJob implements ShouldQueue
         public readonly ?string $adendo = null,
         public readonly array $destinatariosExtras = []
     ) {}
+
+    public function uniqueId(): string
+    {
+        return 'compilado-sad-'.$this->bcaId;
+    }
 
     public function handle(): void
     {

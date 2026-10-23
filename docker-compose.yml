@@ -10,7 +10,8 @@ services:
     restart: "no"
 
   nginx:
-    image: nginx:1.25-alpine
+    image: nginx:1.30.6-alpine
+    restart: unless-stopped
     ports:
       - "18080:80"
     volumes:
@@ -27,6 +28,7 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
+    restart: unless-stopped
     volumes:
       - .:/var/www/html
       - bcas_storage:/var/www/html/storage/app/public/bcas
@@ -89,6 +91,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE:?DB_DATABASE required}
       POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME required}
@@ -106,6 +109,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

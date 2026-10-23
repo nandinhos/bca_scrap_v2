@@ -41,9 +41,7 @@ class ProcessarRetroativosCommand extends Command
         $this->line($enviarEmails ? '<fg=yellow>Atenção: Envio de e-mails ATIVADO.</>' : '<fg=cyan>Envio de e-mails SUPRIMIDO (modo somente verificação).</>');
         $this->newLine();
 
-        if (! $enviarEmails) {
-            config(['bca.suppress_emails' => true]);
-        }
+        $suppressEmails = ! $enviarEmails;
 
         $bcasComOcorrencias = [];
         $totalOcorrencias = 0;
@@ -87,7 +85,7 @@ class ProcessarRetroativosCommand extends Command
 
             // Analisar se ainda não analisado
             if (! $bca->analisado_em) {
-                $analysisService->analisar($bca, 'manual', []);
+                $analysisService->analisar($bca, 'manual', [], $suppressEmails);
             }
 
             // Consultar ocorrências

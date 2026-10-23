@@ -24,7 +24,8 @@ class ProcessarBcaJob implements ShouldQueue
 
     public function __construct(
         public readonly int $bcaId,
-        public readonly array $keywords = []
+        public readonly array $keywords = [],
+        public readonly bool $suppressEmails = false
     ) {}
 
     public function handle(BcaProcessingService $service): void
@@ -50,7 +51,7 @@ class ProcessarBcaJob implements ShouldQueue
             return;
         }
 
-        AnalisarEfetivoJob::dispatch($this->bcaId, 'manual', $this->keywords);
+        AnalisarEfetivoJob::dispatch($this->bcaId, 'manual', $this->keywords, $this->suppressEmails);
     }
 
     public function failed(\Throwable $exception): void

@@ -36,7 +36,7 @@ class BcaAnalysisService
      * Analyze the BCA text and find matching efetivos and keywords.
      * Returns count of new occurrences found.
      */
-    public function analisar(Bca $bca, string $tipo = 'automatica', array $keywordsToSearch = []): int
+    public function analisar(Bca $bca, string $tipo = 'automatica', array $keywordsToSearch = [], bool $suppressEmails = false): int
     {
         $data = $bca->data->format('Y-m-d');
         $cacheKey = "bca:analise:{$data}";
@@ -115,7 +115,7 @@ class BcaAnalysisService
                 if ($ocorrencia->wasRecentlyCreated) {
                     $novos++;
 
-                    if (config('bca.suppress_emails') !== true) {
+                    if (! $suppressEmails) {
                         event(new MilitarEncontradoEvent($ocorrencia));
                     }
                 }
@@ -160,8 +160,8 @@ class BcaAnalysisService
             'keywords_encontradas' => $keywordsEncontradas,
         ]);
 
-        if (config('bca.suppress_emails') === true) {
-            Log::info("BCA [{$data}]: emails suprimidos via config('bca.suppress_emails')");
+        if ($suppressEmails) {
+            Log::info("BCA [{$data}]: emails suprimidos (suppressEmails serializado)");
         } else {
             // Compilado so faz sentido quando surgiu ocorrencia nova; senao uma
             // re-analise reenviaria o mesmo compilado ao SAD a cada busca.

@@ -26,7 +26,8 @@ class BaixarBcaJob implements ShouldQueue
 
     public function __construct(
         public readonly string $data,
-        public readonly array $keywords = []
+        public readonly array $keywords = [],
+        public readonly bool $suppressEmails = false
     ) {}
 
     public static function paraHoje(): self
@@ -65,7 +66,7 @@ class BaixarBcaJob implements ShouldQueue
                     ['numero' => $numero, 'url' => $path]
                 );
 
-                ProcessarBcaJob::dispatch($bca->id, $this->keywords);
+                ProcessarBcaJob::dispatch($bca->id, $this->keywords, $this->suppressEmails);
             });
         } catch (\Throwable $e) {
             Log::error("BaixarBcaJob: transaction failed for {$this->data}: ".$e->getMessage());

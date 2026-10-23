@@ -43,9 +43,7 @@ class ReanalisarBcasCommand extends Command
             return self::FAILURE;
         }
 
-        // Emails sao sempre suprimidos neste comando
-        config(['bca.suppress_emails' => true]);
-
+        // Emails sao sempre suprimidos neste comando (parametro serializado, nao config)
         $query = Bca::whereNotNull('analisado_em')->orderBy('data');
 
         if (! $redownload) {
@@ -92,17 +90,14 @@ class ReanalisarBcasCommand extends Command
                 ]);
 
                 // 4a. Despachar pipeline completo
-                config(['bca.suppress_emails' => true]);
-                BaixarBcaJob::dispatch($dataStr, []);
+                BaixarBcaJob::dispatch($dataStr, [], true);
 
                 $this->line("BCA {$dataStr}: reset completo - BaixarBcaJob despachado  [{$deletados} ocorrencia(s) removidas]");
             } else {
                 // 3b. Reset apenas analise
                 $bca->update(['analisado_em' => null, 'keywords_encontradas' => null]);
-                config(['bca.suppress_emails' => true]);
-
                 // 4b. Re-analisar com texto armazenado
-                $count = $service->analisar($bca, 'manual', []);
+                $count = $service->analisar($bca, 'manual', [], true);
                 $totalEncontrados += $count;
 
                 $this->line(sprintf(

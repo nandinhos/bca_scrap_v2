@@ -1,0 +1,5 @@
+# GitGuardian: fixtures de teste usam segredos ficticios de proposito
+# (ex.: 'token-de-teste', senhas de formulario em teste de throttle).
+# Nenhum segredo real vive em tests/; segredos reais ficam no .env (fora do Git).
+paths_ignore:
+  - "tests/**"

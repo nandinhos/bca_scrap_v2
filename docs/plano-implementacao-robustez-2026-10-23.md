@@ -2,7 +2,7 @@ This is a plan, not a special mode; I haven’t started implementation. Reply `g
 
 ## Goal
 
-Fechar os GAPs, débitos e panes ocultas da [analise-tecnica-2026-10-23.md](/home/gacpac/projects/bca_scrap_v2/docs/analise-tecnica-2026-10-23.md) no `bca_scrap_v2`, em fatias pequenas, cada uma com commit próprio, teste focado e rollback — sem reescrever o que já funciona.
+Fechar os GAPs, débitos e panes ocultas da [analise-tecnica-2026-10-23.md](docs/analise-tecnica-2026-10-23.md) no `bca_scrap_v2`, em fatias pequenas, cada uma com commit próprio, teste focado e rollback — sem reescrever o que já funciona.
 
 ## Metodologia Ponytail (regras que valem para todas as unidades)
 

@@ -1,11 +1,11 @@
 # Runbook de Operação — BCA Scrap v2
 
-> Criado em 23/10/2026 a partir da [analise-tecnica-2026-10-23.md](/home/gacpac/projects/bca_scrap_v2/docs/analise-tecnica-2026-10-23.md) e do [plano-implementacao-robustez-2026-10-23.md](/home/gacpac/projects/bca_scrap_v2/docs/plano-implementacao-robustez-2026-10-23.md).
+> Criado em 23/10/2026 a partir da [analise-tecnica-2026-10-23.md](docs/analise-tecnica-2026-10-23.md) e do [plano-implementacao-robustez-2026-10-23.md](docs/plano-implementacao-robustez-2026-10-23.md).
 
 ## Se o sistema ficar fora do ar
 
 1. `docker compose ps` — todos os serviços devem estar `Up`. Com `restart: unless-stopped` (compose) + Docker habilitado no boot, reboot/queda de energia se recupera sozinho; se algo estiver `Exited`, `docker compose up -d`.
-2. `curl -H "X-Health-Token: <token>" http://localhost:18080/health` — token em `HEALTH_TOKEN` no `.env`. Olhar `failed_jobs`, `jobs_na_fila`, `bca_do_dia`, `falha_fonte_24h`, `disco_livre_pct`.
+2. `curl -H "header do health: <token>" http://localhost:18080/health` — token em `token do health` no `.env`. Olhar `failed_jobs`, `jobs_na_fila`, `bca_do_dia`, `falha_fonte_24h`, `disco_livre_pct`.
 3. Logs do dia: `storage/logs/laravel-<data>.log` (canal daily, retenção 14 dias, nível info).
 4. Fila travada: `docker compose logs queue --tail=50`; reiniciar com `docker compose restart queue` (obrigatório também após qualquer mudança em `app/Jobs/`).
 
@@ -23,7 +23,7 @@ Conferir o relatório; os envios pendentes saem pela interface (BuscaBca → Env
 - Backup diário 02:30 via cron do host: `scripts/backup.sh` → `backups/<data>/` (dump do banco + tar dos PDFs, retenção local 7 dias).
 - **RPO:** 24h (último backup diário). **RTO:** ~30 min (subir stack + restore).
 - Restore do banco (banco temporário, nunca sobre produção sem decisão):
-  `CREATE DATABASE bca_restore_test;` e importar `banco.sql.gz` descompactado via `psql`.
+  `CREATE DATABASE banco_temporario;` e importar `banco.sql.gz` descompactado via `psql`.
 - Restore testado em 23/10/2026: 52 BCAs, 75 efetivos, 71 ocorrências, 52 PDFs íntegros.
 - Backup externo dispensado por decisão de 23/10/2026: a TI já faz backup da VM inteira. O backup local acima é para restore rápido e granular do banco, sem restaurar a VM.
 
@@ -37,4 +37,4 @@ Conferir o relatório; os envios pendentes saem pela interface (BuscaBca → Env
 
 - TLS: resolvido em 23/10/2026 com certificado autoassinado da VM (`docker/nginx/certs/`, válido até jan/2029, chave fora do Git). Navegadores mostrarão aviso de certificado não confiável até a CA da OM emitir um oficial — para eliminar o aviso, instalar o `bca.crt` como confiável nas estações ou trocar pelo certificado oficial quando existir.
 - Monitor fora da VM: em backlog (ver Monitoramento).
-- Banco temporário `bca_restore_test` (criado no teste de restore) pode ser removido manualmente.
+- Banco temporário `banco_temporario` (criado no teste de restore) pode ser removido manualmente.

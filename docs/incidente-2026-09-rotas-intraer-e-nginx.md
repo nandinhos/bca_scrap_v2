@@ -26,18 +26,18 @@ A investigação identificou **duas causas raízes independentes** que ocorreram
 
 ### Causa Raiz A: Perda de Rota para a Intraer no Host Linux
 * **Topologia de Rede:** O servidor possui duas interfaces de rede físicas:
-  * `ens192` (`161.24.238.125/24`): Interface externa/DMZ com gateway padrão `<GATEWAY_EXTERNO>`.
-  * `ens160` (`<IP_DA_VM>/23`): Interface interna da Intraer com gateway `<GATEWAY_INTRAER>`.
-* **A Falha:** A rota estática `<REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160` foi perdida na tabela de rotas do kernel Linux. Como consequência, qualquer requisição para servidores da Intraer (`www.cendoc.intraer` em `<IP_CENDOC>` ou `www.icea.intraer` em `<IP_ICEA>`) era roteada pelo gateway padrão (`<GATEWAY_EXTERNO> dev ens192`), sofrendo timeout.
+  * `<IF_EXTERNA>` (`<IP_EXTERNO>/24`): Interface externa/DMZ com gateway padrão `<GATEWAY_EXTERNO>`.
+  * `<IF_INTERNA>` (`<IP_DA_VM>/23`): Interface interna da Intraer com gateway `<GATEWAY_INTRAER>`.
+* **A Falha:** A rota estática `<REDE_INTRAER> via <GATEWAY_INTRAER> dev <IF_INTERNA>` foi perdida na tabela de rotas do kernel Linux. Como consequência, qualquer requisição para servidores da Intraer (`<CENDOC>` em `<IP_CENDOC>` ou `<ICEA>` em `<IP_ICEA>`) era roteada pelo gateway padrão (`<GATEWAY_EXTERNO> dev <IF_EXTERNA>`), sofrendo timeout.
 * **Por que a rota não subiu no boot:** No arquivo `/etc/network/interfaces`, a rota estava configurada incorretamente sem a diretiva `up`:
   ```text
   # ERRADO (ignorado pelo ifupdown do Debian):
-  ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160
+  ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev <IF_INTERNA>
   ```
 
 ### Causa Raiz B: IP do Upstream FastCGI Desatualizado no Nginx
-* **A Falha:** O container `nginx` estava ativo continuamente há mais de 30 dias. Na inicialização, o Nginx resolveu o nome `php` para o IP interno Docker `192.168.16.4`.
-* **Desalinhamento:** Em 03/08/2026, o container `php` foi reiniciado e recebeu o IP `192.168.16.6`. O IP `192.168.16.4` foi então atribuído ao container `queue`.
+* **A Falha:** O container `nginx` estava ativo continuamente há mais de 30 dias. Na inicialização, o Nginx resolveu o nome `php` para o IP interno Docker `<IP_DOCKER_A>`.
+* **Desalinhamento:** Em 03/08/2026, o container `php` foi reiniciado e recebeu o IP `<IP_DOCKER_B>`. O IP `<IP_DOCKER_A>` foi então atribuído ao container `queue`.
 * **Impacto:** Como o arquivo `docker/nginx/default.conf` usava `fastcgi_pass php:9000;` estaticamente sem resolver dinâmico, o Nginx manteve em memória o IP antigo e continuou encaminhando o tráfego HTTP para o container `queue` (onde a porta 9000 está fechada), gerando `connect() failed (111: Connection refused) while connecting to upstream` e consequente erro `502 Bad Gateway`.
 
 ---
@@ -47,14 +47,14 @@ A investigação identificou **duas causas raízes independentes** que ocorreram
 ### 3.1. Restauração e Persistência da Rota da Intraer
 1. A rota estática foi adicionada imediatamente ao kernel do host:
    ```bash
-   ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160
+   ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev <IF_INTERNA>
    ```
 2. O arquivo `/etc/network/interfaces` foi corrigido para garantir persistência após reinicializações:
    ```text
-   auto ens160
-   iface ens160 inet static
+   auto <IF_INTERNA>
+   iface <IF_INTERNA> inet static
    address <IP_DA_VM>/23
-   up ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev ens160
+   up ip route add <REDE_INTRAER> via <GATEWAY_INTRAER> dev <IF_INTERNA>
    ```
 3. A conectividade com o CENDOC e ICEA foi retestada e validada com `HTTP/1.1 200 OK`.
 
@@ -91,7 +91,7 @@ Foi desenvolvido o comando Artisan `app/Console/Commands/ProcessarRetroativosCom
 2. **Identificação de Ocorrências:**
    * Foram encontradas **22 ocorrências** envolvendo **17 militares** do efetivo em 7 datas diferentes.
 3. **Notificações:**
-   * Todas as 22 notificações individuais foram disparadas via fila para os respectivos militares através do servidor SMTP da FAB (`smtp.fab.mil.br`).
+   * Todas as 22 notificações individuais foram disparadas via fila para os respectivos militares através do servidor SMTP da FAB (`<SMTP_DA_FAB>`).
    * As ocorrências foram marcadas como `enviado_em` no banco de dados.
    * O compilado geral das ocorrências foi consolidado para ciência da SAD do GAC-PAC.
 4. **Boletim do Dia (04/09/2026 - BCA nº 153):**

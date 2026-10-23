@@ -33,4 +33,23 @@ class BcaOcorrencia extends Model
     {
         return $this->enviado_em !== null;
     }
+
+    /**
+     * Situacao terminal ou pendente do envio individual.
+     * Oculto e sem-e-mail sao terminais (nunca serao enviados), nao pendencias.
+     */
+    public function situacaoEnvio(): string
+    {
+        if ($this->foiEnviado()) {
+            return 'enviado';
+        }
+        if ($this->efetivo?->oculto) {
+            return 'oculto (nao envia)';
+        }
+        if (empty($this->efetivo?->email)) {
+            return 'sem e-mail (nao envia)';
+        }
+
+        return 'pendente';
+    }
 }

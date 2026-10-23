@@ -80,6 +80,14 @@ class EnviarCompiladoSADJob implements ShouldBeUnique, ShouldQueue
         if (empty($destinatarios)) {
             Log::warning('EnviarCompiladoSADJob: sad_email não configurado');
 
+            BcaExecucao::create([
+                'tipo' => 'compilado_sad',
+                'data_execucao' => now(),
+                'status' => 'falha',
+                'mensagem' => 'Compilado nao enviado: BCA_SAD_EMAIL nao configurado',
+                'registros_processados' => 0,
+            ]);
+
             return;
         }
 

@@ -120,7 +120,7 @@ class ProcessarRetroativosCommand extends Command
                     $efetivo->saram,
                     $efetivo->unidade?->sigla ?? 'N/A',
                     $oc->tipo_match,
-                    $oc->foiEnviado() ? 'SIM' : 'NÃO (Pendente)',
+                    $oc->situacaoEnvio(),
                 ];
             }
         }

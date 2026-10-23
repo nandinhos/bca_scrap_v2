@@ -26,7 +26,7 @@ class BcaOcorrencia extends Model
 
     public function efetivo(): BelongsTo
     {
-        return $this->belongsTo(Efetivo::class);
+        return $this->belongsTo(Efetivo::class)->withTrashed();
     }
 
     public function foiEnviado(): bool

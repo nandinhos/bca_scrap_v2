@@ -42,13 +42,17 @@ class BaixarBcaJob implements ShouldQueue
         $path = $service->baixarBca($this->data);
 
         if ($path === null) {
-            Log::info("BaixarBcaJob: no BCA found for {$this->data}");
+            // falha_fonte (pane/DNS/fonte fora) nao pode parecer "nao publicado"
+            $fonteOk = $service->fonteRespondeu;
+            Log::info("BaixarBcaJob: no BCA found for {$this->data} (fonte respondeu: ".($fonteOk ? 'sim' : 'nao').')');
 
             BcaExecucao::create([
                 'tipo' => 'automatica',
                 'data_execucao' => now(),
-                'status' => 'sem_bca',
-                'mensagem' => "BCA não encontrado para {$this->data}",
+                'status' => $fonteOk ? 'sem_bca' : 'falha_fonte',
+                'mensagem' => $fonteOk
+                    ? "BCA não encontrado para {$this->data}"
+                    : "Fonte CENDOC/ICEA inacessivel ao buscar BCA de {$this->data}",
                 'registros_processados' => 0,
             ]);
 

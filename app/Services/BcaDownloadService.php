@@ -20,6 +20,9 @@ class BcaDownloadService
 
     private int $maxPdfSizeMb;
 
+    /** A fonte (CENDOC/ICEA) respondeu HTTP na ultima tentativa? Distingue pane de "nao publicado". */
+    public bool $fonteRespondeu = false;
+
     public function __construct()
     {
         $this->baseUrl = config('bca.base_url', 'http://www.cendoc.intraer/sisbca/consulta_bca/');
@@ -35,6 +38,7 @@ class BcaDownloadService
      */
     public function baixarBca(string $data): ?string
     {
+        $this->fonteRespondeu = false;
         $cacheKey = "bca:query:{$data}";
         $cached = Cache::get($cacheKey);
 
@@ -137,6 +141,8 @@ class BcaDownloadService
                     'pesquisar' => 'Pesquisar',
                 ]);
 
+            $this->fonteRespondeu = true;
+
             if ($response->successful()) {
                 $body = $response->body();
 
@@ -161,6 +167,7 @@ class BcaDownloadService
     {
         try {
             $response = Http::timeout(5)->head($url);
+            $this->fonteRespondeu = true;
 
             if ($response->status() === 405) {
                 $response = Http::timeout(10)->get($url);

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bca;
 use App\Models\BcaExecucao;
+use App\Support\CalendarioFab;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 class HealthController extends Controller
@@ -40,9 +43,37 @@ class HealthController extends Controller
         try {
             $checks['failed_jobs'] = DB::table('failed_jobs')->count();
             $checks['jobs_na_fila'] = DB::table('jobs')->count();
+            $maisAntigo = DB::table('jobs')->min('created_at');
+            $checks['fila_mais_antigo_seg'] = $maisAntigo ? (int) now()->diffInSeconds($maisAntigo, true) : 0;
         } catch (\Exception $e) {
             $checks['failed_jobs'] = 'error';
             $checks['jobs_na_fila'] = 'error';
+        }
+
+        try {
+            $ultimaAuto = BcaExecucao::where('tipo', 'automatica')->max('data_execucao');
+            $checks['ultima_execucao_automatica'] = $ultimaAuto;
+            $livre = disk_free_space(storage_path());
+            $total = disk_total_space(storage_path());
+            $checks['disco_livre_pct'] = $total ? round($livre / $total * 100, 1) : null;
+            if ($checks['disco_livre_pct'] !== null && $checks['disco_livre_pct'] < 10) {
+                $status = 'unhealthy';
+            }
+        } catch (\Exception $e) {
+            $checks['operacao'] = 'error';
+        }
+
+        try {
+            $hoje = CarbonImmutable::now(config('app.local_timezone'));
+            if (CalendarioFab::eDiaUtil($hoje) && $hoje->hour >= 12) {
+                $checks['bca_do_dia'] = Bca::where('data', $hoje->format('Y-m-d'))->exists() ? 'ok' : 'pendente';
+            } else {
+                $checks['bca_do_dia'] = 'fora_de_janela';
+            }
+            $checks['falha_fonte_24h'] = BcaExecucao::where('status', 'falha_fonte')
+                ->where('data_execucao', '>=', now()->subHours(24))->count();
+        } catch (\Exception $e) {
+            $checks['bca_do_dia'] = 'error';
         }
 
         $response = [

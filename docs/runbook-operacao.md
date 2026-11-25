@@ -33,8 +33,10 @@ Conferir o relatório; os envios pendentes saem pela interface (BuscaBca → Env
 - Interino em produção: container separado (`docker-compose.monitor.yml`, projeto `bca-monitor`), consultando a cada 5 min — derrubar a aplicação não o derruba. Ver log: `docker compose -f docker-compose.monitor.yml logs`.
 - **BACKLOG (sem VM disponível para testar, decidido em 23/10/2026):** rodar o monitor fora desta VM (outro servidor/serviço de uptime). Só isso detecta queda total da VM; o container interino morre junto, em silêncio.
 
-## Pendências de decisão (não técnicas)
+## Backlog e pendências operacionais (atualizado em 25/11/2026)
 
-- TLS: resolvido em 23/10/2026 com certificado autoassinado da VM (`docker/nginx/certs/`, válido até jan/2029, chave fora do Git). Navegadores mostrarão aviso de certificado não confiável até a CA da OM emitir um oficial — para eliminar o aviso, instalar o `bca.crt` como confiável nas estações ou trocar pelo certificado oficial quando existir.
-- Monitor fora da VM: em backlog (ver Monitoramento).
-- Banco temporário `banco_temporario` (criado no teste de restore) pode ser removido manualmente.
+- **SMTP funcional definitivo (prioridade alta):** após a obrigatoriedade de 2FA no e-mail institucional, o envio está operando temporariamente com conta individual + senha de aplicativo. Providenciar conta funcional definitiva da OM com 2FA + senha de aplicativo (ou liberação de SMTP AUTH / relay interno pela STI), atualizar `MAIL_USERNAME`, `MAIL_PASSWORD` e `MAIL_FROM_ADDRESS` no `.env`, recriar os containers (`docker compose up -d php queue scheduler`) e validar envio via `tinker`.
+- **Certificado TLS oficial da OM (prioridade média):** resolvido interinamente em 23/10/2026 com certificado autoassinado da VM (`docker/nginx/certs/`, válido até jan/2029, chave fora do Git). Para eliminar o aviso nos navegadores, distribuir `bca.crt` como confiável nas estações ou substituir pelo certificado oficial emitido pela CA da OM e rodar `docker compose restart nginx`.
+- **Monitoramento externo fora da VM (prioridade média):** em backlog (ver Monitoramento). Cadastrar `GET /health` com header `X-Health-Token` em ferramenta de monitoramento fora desta VM, alertando para HTTP ≠ 200, `"status"` ≠ `"healthy"`, `"bca_do_dia":"pendente"`, `"failed_jobs" > 0` ou `"falha_fonte_24h" >= 3`.
+- **Revisão anual de feriados (preventiva):** revisar em janeiro os feriados móveis em `config/bca.php` (2026 e 2027 já cadastrados, incluindo `11-20` Consciência Negra).
+- **Concluído em 25/11/2026:** bugfixes de `/health` (`555df61`), `EnviarCompiladoSADJob` (`555df61`), fallback paralelo ICEA (`d7f1c94`), limpeza de `failed_jobs` históricos e remoção do banco temporário de restore.

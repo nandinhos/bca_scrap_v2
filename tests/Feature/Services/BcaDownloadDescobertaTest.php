@@ -62,3 +62,21 @@ it('CENDOC fora: usa o numero descoberto e cai para o ICEA', function () {
 
     expect($path)->toBe('bcas/2026-04-08.pdf');
 });
+
+it('CENDOC POST falha: encontra no ICEA via brute-force em lotes paralelos', function () {
+    Http::fake(function (Request $request) {
+        if (str_contains($request->url(), 'busca_bca_data.php')) {
+            return Http::response('erro', 500);
+        }
+        if (str_contains($request->url(), 'icea.test/boletim/bca_12_8-4-2026.pdf')) {
+            return Http::response(pdfFake(), 200, ['Content-Type' => 'application/pdf']);
+        }
+
+        return Http::response('nf', 404);
+    });
+
+    $path = app(BcaDownloadService::class)->baixarBca('2026-04-08');
+
+    expect($path)->toBe('bcas/2026-04-08.pdf')
+        ->and(Storage::disk('bcas')->exists('bcas/2026-04-08.pdf'))->toBeTrue();
+});

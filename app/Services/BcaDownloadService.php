@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -106,19 +108,52 @@ class BcaDownloadService
             return null;
         }
 
-        // 4. CENDOC POST failed — brute-force ICEA as last resort
+        // 4. CENDOC POST failed — brute-force ICEA in parallel chunks as last resort
         Log::info("BCA [{$data}]: CENDOC POST failed, brute-forcing ICEA 1-366...");
-        for ($i = 1; $i <= 366; $i++) {
-            $url = $iceaBase."bca_{$i}_{$dia}-{$mes}-{$ano}.pdf";
+        $chunkSize = max(1, $this->chunkSize);
 
-            if ($this->checkUrlExists($url)) {
-                Log::info("BCA [{$data}]: Found at ICEA number {$i}");
+        for ($start = 1; $start <= 366; $start += $chunkSize) {
+            $end = min(366, $start + $chunkSize - 1);
+            $urls = [];
 
-                return $url;
+            for ($i = $start; $i <= $end; $i++) {
+                $urls[$i] = $iceaBase."bca_{$i}_{$dia}-{$mes}-{$ano}.pdf";
             }
 
-            if ($i % 50 === 0) {
-                Log::debug("BCA [{$data}]: ICEA brute force at {$i}/366");
+            try {
+                $responses = Http::pool(function (Pool $pool) use ($urls) {
+                    foreach ($urls as $i => $url) {
+                        $pool->as((string) $i)->timeout(5)->head($url);
+                    }
+                });
+            } catch (\Throwable) {
+                continue;
+            }
+
+            foreach ($urls as $i => $url) {
+                $response = $responses[(string) $i] ?? null;
+
+                if (! $response instanceof Response) {
+                    continue;
+                }
+
+                $this->fonteRespondeu = true;
+
+                if ($response->status() === 405) {
+                    if ($this->checkUrlExists($url)) {
+                        Log::info("BCA [{$data}]: Found at ICEA number {$i}");
+
+                        return $url;
+                    }
+
+                    continue;
+                }
+
+                if ($this->isPdfResponse($response)) {
+                    Log::info("BCA [{$data}]: Found at ICEA number {$i}");
+
+                    return $url;
+                }
             }
         }
 
@@ -173,19 +208,24 @@ class BcaDownloadService
                 $response = Http::timeout(10)->get($url);
             }
 
-            if (! $response->successful()) {
-                return false;
-            }
-
-            $ct = strtolower($response->header('Content-Type') ?? '');
-
-            // CENDOC returns "application/save", ICEA returns "application/pdf"
-            return str_contains($ct, 'pdf')
-                || str_contains($ct, 'octet-stream')
-                || str_contains($ct, 'save');
+            return $this->isPdfResponse($response);
         } catch (\Exception) {
             return false;
         }
+    }
+
+    private function isPdfResponse(Response $response): bool
+    {
+        if (! $response->successful()) {
+            return false;
+        }
+
+        $ct = strtolower($response->header('Content-Type') ?? '');
+
+        // CENDOC returns "application/save", ICEA returns "application/pdf"
+        return str_contains($ct, 'pdf')
+            || str_contains($ct, 'octet-stream')
+            || str_contains($ct, 'save');
     }
 
     private function downloadFromUrl(string $url, string $data): ?string

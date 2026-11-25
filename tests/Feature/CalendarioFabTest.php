@@ -11,6 +11,7 @@ it('reconhece feriados FAB e dias uteis', function (string $data, bool $feriado,
 })->with([
     'Dia do Aviador 2026' => ['2026-10-23', true, false],
     'Aparecida 2026' => ['2026-10-12', true, false],
+    'Consciencia Negra 2026' => ['2026-11-20', true, false],
     'Sexta-feira Santa 2026' => ['2026-04-03', true, false],
     'sabado comum' => ['2026-10-24', false, false],
     'segunda comum' => ['2026-10-26', false, true],

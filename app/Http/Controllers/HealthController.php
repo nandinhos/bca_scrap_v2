@@ -44,8 +44,10 @@ class HealthController extends Controller
             $checks['failed_jobs'] = DB::table('failed_jobs')->count();
             $checks['jobs_na_fila'] = DB::table('jobs')->count();
             $maisAntigo = DB::table('jobs')->min('created_at');
-            $checks['fila_mais_antigo_seg'] = $maisAntigo ? (int) now()->diffInSeconds($maisAntigo, true) : 0;
-        } catch (\Exception $e) {
+            $checks['fila_mais_antigo_seg'] = $maisAntigo
+                ? (int) now()->diffInSeconds(CarbonImmutable::createFromTimestamp((int) $maisAntigo), true)
+                : 0;
+        } catch (\Throwable $e) {
             $checks['failed_jobs'] = 'error';
             $checks['jobs_na_fila'] = 'error';
         }

@@ -19,7 +19,9 @@ class EnviarCompiladoSADJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;
+    public int $tries = 25;
+
+    public int $maxExceptions = 3;
 
     public int $timeout = 60;
 
@@ -52,8 +54,10 @@ class EnviarCompiladoSADJob implements ShouldBeUnique, ShouldQueue
             ->whereHas('efetivo', fn ($q) => $q->where('oculto', false)->whereNotNull('email')->where('email', '!=', ''))
             ->count();
 
-        if ($pendentes > 0 && $this->esperas < 20) {
-            $this->esperas++;
+        $esperaAtual = $this->job ? $this->attempts() : ($this->esperas + 1);
+
+        if ($pendentes > 0 && $esperaAtual <= 20) {
+            $this->esperas = $esperaAtual;
             Log::info("EnviarCompiladoSADJob: aguardando {$pendentes} e-mail(is) individuais do BCA {$bca->data->format('Y-m-d')} (espera {$this->esperas})");
             $this->release(15);
 

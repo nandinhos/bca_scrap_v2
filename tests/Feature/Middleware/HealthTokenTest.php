@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -23,6 +24,25 @@ it('health expoe contagem de failed_jobs e fila', function () {
     $this->get('/health', ['X-Health-Token' => 'token-de-teste'])
         ->assertOk()
         ->assertJsonStructure(['checks' => ['failed_jobs', 'jobs_na_fila']]);
+});
+
+it('health calcula fila_mais_antigo_seg quando ha job na tabela jobs', function () {
+    config(['bca.health_token' => 'token-de-teste']);
+
+    DB::table('jobs')->insert([
+        'queue' => 'default',
+        'payload' => '{}',
+        'attempts' => 0,
+        'reserved_at' => null,
+        'available_at' => now()->timestamp,
+        'created_at' => now()->subSeconds(30)->timestamp,
+    ]);
+
+    $response = $this->get('/health', ['X-Health-Token' => 'token-de-teste'])
+        ->assertOk()
+        ->assertJsonPath('checks.jobs_na_fila', 1);
+
+    expect($response->json('checks.fila_mais_antigo_seg'))->toBeGreaterThanOrEqual(25);
 });
 
 it('login sofre throttle apos 5 tentativas', function () {

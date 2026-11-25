@@ -86,6 +86,31 @@ it('aguarda individuais pendentes em vez de enviar compilado parcial', function 
     expect($job->esperas)->toBe(1);
 });
 
+it('nao reagenda mais apos atingir o limite de 20 esperas na fila', function () {
+    Mail::fake();
+
+    config(['bca.sad_email' => 'sad@om-exemplo.test']);
+    $efetivo = Efetivo::factory()->create(['email' => 'militar@example.com', 'oculto' => false]);
+    $bca = Bca::factory()->create();
+    BcaOcorrencia::create([
+        'bca_id' => $bca->id, 'efetivo_id' => $efetivo->id, 'snippet' => 'test', 'enviado_em' => null,
+    ]);
+
+    $queueJob = \Mockery::mock(\Illuminate\Contracts\Queue\Job::class);
+    $queueJob->shouldReceive('attempts')->andReturn(21);
+    $queueJob->shouldNotReceive('release');
+
+    $job = new EnviarCompiladoSADJob($bca->id);
+    $job->setJob($queueJob);
+
+    expect($job->tries)->toBe(25)
+        ->and($job->maxExceptions)->toBe(3);
+
+    $job->handle();
+
+    Mail::assertNothingSent();
+});
+
 it('does not send email when there are no sent occurrences', function () {
     Mail::fake();
 

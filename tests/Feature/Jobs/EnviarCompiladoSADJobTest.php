@@ -6,6 +6,7 @@ use App\Models\Bca;
 use App\Models\BcaOcorrencia;
 use App\Models\Efetivo;
 use App\Models\Unidade;
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 
@@ -96,7 +97,7 @@ it('nao reagenda mais apos atingir o limite de 20 esperas na fila', function () 
         'bca_id' => $bca->id, 'efetivo_id' => $efetivo->id, 'snippet' => 'test', 'enviado_em' => null,
     ]);
 
-    $queueJob = \Mockery::mock(\Illuminate\Contracts\Queue\Job::class);
+    $queueJob = Mockery::mock(Job::class);
     $queueJob->shouldReceive('attempts')->andReturn(21);
     $queueJob->shouldNotReceive('release');
 

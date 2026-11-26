@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class Bca extends Model
 {
@@ -35,7 +37,8 @@ class Bca extends Model
     }
 
     /**
-     * URL direta do PDF bruto na fonte oficial (ICEA), sem zero-leading em dia/mês.
+     * URL direta do PDF bruto na fonte oficial (ICEA).
+     * Em dias/meses de 1 dígito, o ICEA alterna entre j-n-Y e d-m-Y.
      */
     public function urlPdfExterno(): ?string
     {
@@ -44,10 +47,25 @@ class Bca extends Model
         }
 
         $base = rtrim((string) config('bca.icea_url', 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/'), '/').'/';
-        $dia = $this->data->format('j');
-        $mes = $this->data->format('n');
         $ano = $this->data->year;
+        $semZero = "{$base}bca_{$this->numero}_{$this->data->format('j')}-{$this->data->format('n')}-{$ano}.pdf";
+        $comZero = "{$base}bca_{$this->numero}_{$this->data->format('d')}-{$this->data->format('m')}-{$ano}.pdf";
 
-        return "{$base}bca_{$this->numero}_{$dia}-{$mes}-{$ano}.pdf";
+        if ($semZero === $comZero || app()->runningUnitTests()) {
+            return $semZero;
+        }
+
+        return Cache::remember("bca:icea_url:{$this->data->format('Y-m-d')}:{$this->numero}", now()->addHours(24), function () use ($semZero, $comZero) {
+            foreach ([$semZero, $comZero] as $url) {
+                try {
+                    if (Http::timeout(3)->head($url)->successful()) {
+                        return $url;
+                    }
+                } catch (\Throwable) {
+                }
+            }
+
+            return $semZero;
+        });
     }
 }

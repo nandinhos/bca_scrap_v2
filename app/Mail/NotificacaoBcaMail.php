@@ -27,7 +27,7 @@ class NotificacaoBcaMail extends Mailable
 
     public function content(): Content
     {
-        $bcaDownloadUrl = $this->ocorrencia->bca->url ? route('bca.pdf', $this->ocorrencia->bca->data->format('Y-m-d')) : null;
+        $bcaDownloadUrl = $this->ocorrencia->bca->urlPdfExterno();
 
         return new Content(
             view: 'mail.notificacao-bca',

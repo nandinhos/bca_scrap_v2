@@ -33,4 +33,21 @@ class Bca extends Model
     {
         return $query->whereNotNull('processado_em');
     }
+
+    /**
+     * URL direta do PDF bruto na fonte oficial (ICEA), sem zero-leading em dia/mês.
+     */
+    public function urlPdfExterno(): ?string
+    {
+        if (! $this->data || empty($this->numero) || (string) $this->numero === '0') {
+            return null;
+        }
+
+        $base = rtrim((string) config('bca.icea_url', 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/'), '/').'/';
+        $dia = $this->data->format('j');
+        $mes = $this->data->format('n');
+        $ano = $this->data->year;
+
+        return "{$base}bca_{$this->numero}_{$dia}-{$mes}-{$ano}.pdf";
+    }
 }

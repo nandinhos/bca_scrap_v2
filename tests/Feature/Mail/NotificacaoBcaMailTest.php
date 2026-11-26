@@ -43,3 +43,20 @@ it('omite o posto de civis', function () {
         ->toContain('Olá, SILVA!')
         ->not->toContain('Civil SILVA');
 });
+
+it('usa link direto do PDF no ICEA sem zero-leading e sem rota autenticada', function () {
+    config(['bca.icea_url' => 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/']);
+
+    $bca = Bca::factory()->create(['numero' => '63', 'data' => '2026-04-08']);
+    $ocorrencia = BcaOcorrencia::create([
+        'bca_id' => $bca->id,
+        'efetivo_id' => Efetivo::factory()->create()->id,
+        'snippet' => 'trecho',
+    ]);
+
+    $html = (new NotificacaoBcaMail($ocorrencia->fresh(['bca', 'efetivo'])))->render();
+
+    expect($html)
+        ->toContain('http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/bca_63_8-4-2026.pdf')
+        ->not->toContain('/bca/2026-04-08/pdf');
+});

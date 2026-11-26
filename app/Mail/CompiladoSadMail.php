@@ -29,7 +29,7 @@ class CompiladoSadMail extends Mailable
 
     public function content(): Content
     {
-        $bcaDownloadUrl = $this->bca->url ? route('bca.pdf', $this->bca->data->format('Y-m-d')) : null;
+        $bcaDownloadUrl = $this->bca->urlPdfExterno();
 
         return new Content(
             view: 'mail.compilado-sad',

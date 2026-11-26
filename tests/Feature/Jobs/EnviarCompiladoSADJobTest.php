@@ -140,3 +140,22 @@ it('does not send email when sad_email is not configured', function () {
 
     Mail::assertNothingSent();
 });
+
+it('compilado usa link direto do PDF no ICEA sem zero-leading', function () {
+    config(['bca.icea_url' => 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/']);
+
+    $efetivo = Efetivo::factory()->create(['email' => 'militar@example.com']);
+    $bca = Bca::factory()->create(['numero' => '63', 'data' => '2026-04-08']);
+    $oc = BcaOcorrencia::create([
+        'bca_id' => $bca->id,
+        'efetivo_id' => $efetivo->id,
+        'snippet' => 'test',
+        'enviado_em' => now(),
+    ]);
+
+    $html = (new CompiladoSadMail($bca, collect([$oc->load('efetivo.unidade')])))->render();
+
+    expect($html)
+        ->toContain('http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/bca_63_8-4-2026.pdf')
+        ->not->toContain('/bca/2026-04-08/pdf');
+});
